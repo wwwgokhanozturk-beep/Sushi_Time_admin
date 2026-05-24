@@ -1,0 +1,68 @@
+/* ════════════════════════════════════════
+   THERMAL RECEIPT — 80 mm Türkiye standardı
+   ════════════════════════════════════════ */
+
+/* Скрываем контейнер чека при обычном просмотре */
+#receipt-root {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: 80mm auto;   /* Türkiye POS standardı: 80 mm genişlik, yükseklik içeriğe göre */
+    margin: 0;
+  }
+
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    width: 80mm !important;
+    height: auto !important;
+  }
+
+  /* Скрываем всё приложение */
+  body > * {
+    display: none !important;
+  }
+
+  /* Показываем только чек */
+  body > #receipt-root {
+    display: block !important;
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 80mm !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  #receipt-print-area {
+    display: block !important;
+    width: 72mm !important;   /* 80mm − 4mm отступ с каждой стороны */
+    height: auto !important;
+    margin: 0 !important;
+    padding: 4mm !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    box-sizing: border-box !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  #receipt-root *,
+  #receipt-print-area * {
+    visibility: visible !important;
+    color: #000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  #receipt-print-area svg {
+    display: block !important;
+    margin: 0 auto !important;
+  }
+}
