@@ -8,7 +8,7 @@ export function useDriverLocation(driverId) {
 
   useEffect(() => {
     if (!driverId) return;
-    const socket = io(SOCKET_URL, { transports: ['websocket'] });
+    const socket = io(SOCKET_URL, { transports: ['polling', 'websocket'] });
 
     socket.on('driver:location', (data) => {
       if (data.driverId === driverId) {

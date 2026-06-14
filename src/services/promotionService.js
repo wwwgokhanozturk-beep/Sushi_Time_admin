@@ -6,4 +6,11 @@ export const promotionService = {
   create:    (data)       => api.post('/promotions', data),
   update:    (id, data)   => api.put(`/promotions/${id}`, data),
   remove:    (id)         => api.delete(`/promotions/${id}`),
+  uploadImage: (file) => {
+    const fd = new FormData();
+    fd.append('image', file);
+    return api.post('/upload/image', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };

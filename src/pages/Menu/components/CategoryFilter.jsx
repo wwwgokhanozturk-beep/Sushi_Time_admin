@@ -1,9 +1,21 @@
-﻿import React from "react";
+import React from "react";
 import { Box, Chip } from "@mui/material";
 import { MENU_CATEGORIES } from "@/utils/constants";
+import { useCategoryOrder } from "@/hooks/useSettings";
+
+// Order MENU_CATEGORIES by the admin-defined saved order; unknown/new
+// categories fall to the end so nothing is ever hidden.
+function orderCategories(saved) {
+  const known = new Set(MENU_CATEGORIES);
+  const ordered = (saved || []).filter((c) => known.has(c));
+  const rest = MENU_CATEGORIES.filter((c) => !ordered.includes(c));
+  return [...ordered, ...rest];
+}
 
 export default function CategoryFilter({ selected, onChange }) {
-  const categories = ["all", ...MENU_CATEGORIES];
+  const { data: savedOrder } = useCategoryOrder();
+  const categories = ["all", ...orderCategories(savedOrder)];
+
   const formatLabel = (value) =>
     value === "all"
       ? "All"

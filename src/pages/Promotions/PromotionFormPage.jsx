@@ -6,9 +6,12 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SaveIcon      from '@mui/icons-material/Save';
+import UploadIcon    from '@mui/icons-material/Upload';
 import PageLayout    from '@/components/layout/PageLayout';
 import { usePromotion, useCreatePromotion, useUpdatePromotion } from '@/hooks/usePromotions';
+import { promotionService } from '@/services/promotionService';
 import { useParams, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const BADGES = ['', 'HOT', 'NEW', 'SALE', 'LIMITED'];
 
@@ -40,6 +43,26 @@ export default function PromotionFormPage() {
   const [form, setForm]     = useState(EMPTY);
   const [errors, setErrors] = useState({});
   const [langTab, setLangTab] = useState(0); // 0=EN, 1=RU, 2=TR
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { data } = await promotionService.uploadImage(file);
+      const url = data?.data?.url || data?.url;
+      if (url) {
+        setForm((prev) => ({ ...prev, imageUrl: url }));
+        toast.success('Image uploaded');
+      }
+    } catch {
+      toast.error('Image upload failed');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
 
   useEffect(() => {
     if (existing) {
@@ -160,16 +183,31 @@ export default function PromotionFormPage() {
                 </Box>
               </Grid>
 
-              {/* Image URL */}
+              {/* Image URL + Upload */}
               <Grid item xs={12}>
-                <TextField fullWidth label="Image URL" value={form.imageUrl}
-                  onChange={set('imageUrl')} placeholder="https://example.com/promo.jpg" />
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                  Banner Image
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                  <TextField sx={{ flex: 1, minWidth: 240 }} label="Image URL" value={form.imageUrl}
+                    onChange={set('imageUrl')} placeholder="https://example.com/promo.jpg" />
+                  <Button component="label" variant="outlined"
+                    disabled={uploading}
+                    startIcon={uploading ? <CircularProgress size={16} /> : <UploadIcon />}
+                    sx={{ height: 56, px: 2.5, whiteSpace: 'nowrap' }}
+                  >
+                    {uploading ? 'Uploading…' : 'Upload'}
+                    <input type="file" hidden
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      onChange={handleFileUpload} />
+                  </Button>
+                </Box>
               </Grid>
               {form.imageUrl && (
                 <Grid item xs={12}>
                   <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>Preview</Typography>
                   <Box component="img" src={form.imageUrl} alt="preview"
-                    sx={{ maxHeight: 140, borderRadius: 2, objectFit: 'cover' }}
+                    sx={{ width: '100%', maxHeight: 180, borderRadius: 2, objectFit: 'cover' }}
                     onError={(e) => { e.target.style.display = 'none'; }} />
                 </Grid>
               )}

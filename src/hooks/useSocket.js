@@ -19,7 +19,8 @@ export default function useSocket(handlers = {}) {
     if (!token) return;
 
     const socket = io(SOCKET_URL, {
-      transports: ['websocket', 'polling'],
+      // polling first guarantees the connection over HTTPS, then upgrades to websocket
+      transports: ['polling', 'websocket'],
       auth: { token },
     });
 

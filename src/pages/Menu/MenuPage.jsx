@@ -22,8 +22,10 @@ import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ReorderIcon from "@mui/icons-material/Reorder";
 import PageLayout from "@/components/layout/PageLayout";
 import CategoryFilter from "./components/CategoryFilter";
+import CategoryOrderDialog from "./components/CategoryOrderDialog";
 import { useMenuItems, useDeleteMenuItem } from "@/hooks/useMenu";
 import { useNavigate } from "react-router-dom";
 import { formatPrice } from "@/utils/formatters";
@@ -48,6 +50,7 @@ export default function MenuPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
   const [deleteId, setDeleteId] = useState(null);
+  const [orderOpen, setOrderOpen] = useState(false);
   const deleteMut = useDeleteMenuItem();
 
   const { data: items = [], isLoading } = useMenuItems();
@@ -96,17 +99,29 @@ export default function MenuPage() {
           }}
           sx={{ maxWidth: 300 }}
         />
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => navigate("/menu/new")}
-        >
-          Add Item
-        </Button>
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Button
+            variant="outlined"
+            startIcon={<ReorderIcon />}
+            onClick={() => setOrderOpen(true)}
+          >
+            Reorder Categories
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate("/menu/new")}
+          >
+            Add Item
+          </Button>
+        </Box>
       </Box>
 
       {/* Category chips */}
       <CategoryFilter selected={category} onChange={setCategory} />
+
+      {/* Drag-and-drop category order dialog */}
+      <CategoryOrderDialog open={orderOpen} onClose={() => setOrderOpen(false)} />
 
       {/* Items grid */}
       {isLoading ? (
