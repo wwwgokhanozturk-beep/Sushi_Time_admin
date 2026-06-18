@@ -8,37 +8,7 @@ import { useNotificationStore } from '@/store/notificationStore';
 import { useNavigate } from 'react-router-dom';
 import useSocket from '@/hooks/useSocket';
 import toast from 'react-hot-toast';
-
-/** Play a short "ding-ding" notification sound using the Web Audio API. */
-function playNotificationSound() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-
-    const playTone = (freq, startTime, duration) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, startTime);
-
-      gain.gain.setValueAtTime(0, startTime);
-      gain.gain.linearRampToValueAtTime(0.4, startTime + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-
-      osc.start(startTime);
-      osc.stop(startTime + duration);
-    };
-
-    // Two ascending tones: 880 Hz → 1100 Hz
-    playTone(880,  ctx.currentTime,        0.18);
-    playTone(1100, ctx.currentTime + 0.20, 0.22);
-  } catch {
-    // Web Audio API may be unavailable — silently skip
-  }
-}
+import { startAlert, stopAlert } from '@/utils/alertSound';
 
 export default function NotificationBell() {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -54,16 +24,21 @@ export default function NotificationBell() {
         { orderId: data.orderId }
       );
       toast.success(`🍣 Новый заказ от ${data.customerName}!`, { duration: 5000 });
-      playNotificationSound();
+      // Ring repeatedly (~1 min) until the admin acknowledges the new order.
+      startAlert('order');
     },
   }), [add]);
 
   useSocket(handlers);
 
-  const handleOpen = (e) => setAnchorEl(e.currentTarget);
+  // Opening the bell counts as "seen" — silence the alert.
+  const handleOpen = (e) => { stopAlert(); setAnchorEl(e.currentTarget); };
   const handleClose = () => setAnchorEl(null);
 
+  const handleMarkAllRead = () => { stopAlert(); markAllRead(); };
+
   const handleClick = (n) => {
+    stopAlert();
     useNotificationStore.getState().markAsRead(n.id);
     if (n.data?.orderId) {
       navigate(`/orders/${n.data.orderId}`);
@@ -90,7 +65,7 @@ export default function NotificationBell() {
         <Box sx={{ px: 2, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="subtitle1" fontWeight={700}>Уведомления</Typography>
           {unreadCount > 0 && (
-            <Button size="small" onClick={markAllRead}>Прочитать все</Button>
+            <Button size="small" onClick={handleMarkAllRead}>Прочитать все</Button>
           )}
         </Box>
         <Divider />

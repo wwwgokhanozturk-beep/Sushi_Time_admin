@@ -8,28 +8,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import useSocket from '@/hooks/useSocket';
 import { useChatNotificationStore } from '@/store/chatNotificationStore';
-
-// Two-tone "ding-ding" chat sound via WebAudio
-function playChatSound() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const tone = (freq, start, dur, gainPeak = 0.35) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, start);
-      gain.gain.setValueAtTime(0, start);
-      gain.gain.linearRampToValueAtTime(gainPeak, start + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.001, start + dur);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(start);
-      osc.stop(start + dur);
-    };
-    const t0 = ctx.currentTime;
-    tone(1175, t0, 0.16);              // D6
-    tone(1568, t0 + 0.14, 0.22);       // G6
-  } catch {}
-}
+import { startAlert, stopAlert, playOnce } from '@/utils/alertSound';
 
 const getCustomerName = (customer) =>
   customer?.name || customer?.phone || customer?.email || 'Customer';
@@ -66,8 +45,8 @@ export default function ChatNotificationBell() {
       // (ChatPage marks messages read on the server side)
       const onChat = window.location.pathname.startsWith('/chat');
       if (onChat) {
-        // Still play soft cue but don't add to bell
-        playChatSound();
+        // Admin is already in chat — a single soft cue is enough.
+        playOnce('chat');
         return;
       }
 
@@ -81,7 +60,8 @@ export default function ChatNotificationBell() {
         lastMessageAt: message.createdAt || new Date().toISOString(),
       });
 
-      playChatSound();
+      // Ring repeatedly (~1 min) until the admin opens/acknowledges the chat.
+      startAlert('chat');
       toast(`💬 ${getCustomerName(customer)}: ${message.text}`, {
         duration: 5000,
         icon: '💬',
@@ -98,10 +78,13 @@ export default function ChatNotificationBell() {
 
   useSocket(handlers);
 
-  const handleOpen = (e) => setAnchorEl(e.currentTarget);
+  const handleOpen = (e) => { stopAlert(); setAnchorEl(e.currentTarget); };
   const handleClose = () => setAnchorEl(null);
 
+  const handleMarkAllRead = () => { stopAlert(); markAllRead(); };
+
   const handleClick = (thread) => {
+    stopAlert();
     markThreadRead(thread.threadId);
     navigate(`/chat?threadId=${thread.threadId}`);
     handleClose();
@@ -129,7 +112,7 @@ export default function ChatNotificationBell() {
         }}>
           <Typography variant="subtitle1" fontWeight={700}>Chat messages</Typography>
           {unreadCount > 0 && (
-            <Button size="small" onClick={markAllRead}>Mark all read</Button>
+            <Button size="small" onClick={handleMarkAllRead}>Mark all read</Button>
           )}
         </Box>
         <Divider />
