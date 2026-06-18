@@ -12,11 +12,13 @@ import { useMenuItem, useCreateMenuItem, useUpdateMenuItem } from '@/hooks/useMe
 import { useParams, useNavigate } from 'react-router-dom';
 import { MENU_CATEGORIES } from '@/utils/constants';
 import { menuService } from '@/services/menuService';
+import ImageFrameEditor from '@/components/ImageFrameEditor';
 import toast from 'react-hot-toast';
 
 const EMPTY = {
   name: '', category: 'rolls', price: '',
-  imageUrl: '', preparationTime: '15', calories: '0', isAvailable: true,
+  imageUrl: '', imageScale: 1, imageOffsetX: 0, imageOffsetY: 0,
+  preparationTime: '15', calories: '0', isAvailable: true,
   stock: '',   // '' = unlimited (null); number = tracked quantity
   // per-language fields
   description:    '',
@@ -70,6 +72,9 @@ export default function MenuItemFormPage() {
         category: existing.category || 'rolls',
         price: String(existing.price ?? ''),
         imageUrl: existing.imageUrl || '',
+        imageScale: existing.imageScale ?? 1,
+        imageOffsetX: existing.imageOffsetX ?? 0,
+        imageOffsetY: existing.imageOffsetY ?? 0,
         ingredients:    (existing.ingredients    || []).join(', '),
         ingredients_ru: (existing.ingredients_ru || []).join(', '),
         ingredients_tr: (existing.ingredients_tr || []).join(', '),
@@ -111,6 +116,9 @@ export default function MenuItemFormPage() {
       category: form.category,
       price: Number(form.price),
       imageUrl: form.imageUrl.trim(),
+      imageScale: Number(form.imageScale) || 1,
+      imageOffsetX: Number(form.imageOffsetX) || 0,
+      imageOffsetY: Number(form.imageOffsetY) || 0,
       ingredients:    splitCSV(form.ingredients),
       ingredients_ru: splitCSV(form.ingredients_ru),
       ingredients_tr: splitCSV(form.ingredients_tr),
@@ -235,6 +243,21 @@ export default function MenuItemFormPage() {
                     />
                   </Button>
                 </Box>
+
+                {/* Фото-редактор: рамка + зум + перетаскивание */}
+                {form.imageUrl ? (
+                  <Box sx={{ mt: 2 }}>
+                    <ImageFrameEditor
+                      imageUrl={form.imageUrl}
+                      scale={Number(form.imageScale) || 1}
+                      offsetX={Number(form.imageOffsetX) || 0}
+                      offsetY={Number(form.imageOffsetY) || 0}
+                      onChange={({ scale, offsetX, offsetY }) =>
+                        setForm((prev) => ({ ...prev, imageScale: scale, imageOffsetX: offsetX, imageOffsetY: offsetY }))
+                      }
+                    />
+                  </Box>
+                ) : null}
               </Grid>
 
               {/* Prep time + Calories */}
