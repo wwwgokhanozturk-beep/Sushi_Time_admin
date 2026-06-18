@@ -8,7 +8,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import useSocket from '@/hooks/useSocket';
 import { useChatNotificationStore } from '@/store/chatNotificationStore';
-import { startAlert, stopAlert, playOnce } from '@/utils/alertSound';
+import { stopAlert, playOnce } from '@/utils/alertSound';
 
 const getCustomerName = (customer) =>
   customer?.name || customer?.phone || customer?.email || 'Customer';
@@ -60,8 +60,8 @@ export default function ChatNotificationBell() {
         lastMessageAt: message.createdAt || new Date().toISOString(),
       });
 
-      // Ring repeatedly (~1 min) until the admin opens/acknowledges the chat.
-      startAlert('chat');
+      // A single soft cue is enough for chat (no repeating ring).
+      playOnce('chat');
       toast(`💬 ${getCustomerName(customer)}: ${message.text}`, {
         duration: 5000,
         icon: '💬',

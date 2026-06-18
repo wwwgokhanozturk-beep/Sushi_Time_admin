@@ -9,6 +9,22 @@ let ctx = null;
 let repeatTimer = null;
 let stopTimer = null;
 
+// ── Alerting state (so the UI can show a "stop sound" button while ringing) ──
+let alerting = false;
+const listeners = new Set();
+function setAlerting(v) {
+  if (v === alerting) return;
+  alerting = v;
+  listeners.forEach((fn) => { try { fn(v); } catch {} });
+}
+/** True while a repeating alert is ringing. */
+export function isAlerting() { return alerting; }
+/** Subscribe to alerting on/off changes. Returns an unsubscribe fn. */
+export function subscribeAlerting(fn) {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
 function getCtx() {
   if (!ctx) {
     const Ctx = window.AudioContext || window.webkitAudioContext;
@@ -69,6 +85,7 @@ export function startAlert(kind = 'order', { durationMs = 60000, intervalMs = 25
   chime(kind);
   repeatTimer = setInterval(() => chime(kind), intervalMs);
   stopTimer = setTimeout(stopAlert, durationMs);
+  setAlerting(true);
 }
 
 /** Silence the alert immediately. Safe to call when nothing is playing. */
@@ -81,4 +98,5 @@ export function stopAlert() {
     clearTimeout(stopTimer);
     stopTimer = null;
   }
+  setAlerting(false);
 }

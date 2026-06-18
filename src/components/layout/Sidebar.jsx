@@ -21,6 +21,7 @@ import ChatIcon from "@mui/icons-material/Chat";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { useNavigate, useLocation } from "react-router-dom";
 import { SIDEBAR_WIDTH } from "@/utils/constants";
+import { useChatNotificationStore } from "@/store/chatNotificationStore";
 
 const NAV_ITEMS = [
   { label: "Dashboard", icon: <DashboardIcon />, path: "/" },
@@ -37,6 +38,9 @@ const NAV_ITEMS = [
 export default function Sidebar({ mobileOpen, onClose }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const chatUnread = useChatNotificationStore((s) =>
+    s.threads.reduce((sum, t) => sum + (t.count || 0), 0)
+  );
 
   const drawer = (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -95,6 +99,26 @@ export default function Sidebar({ mobileOpen, onClose }) {
                   primary={item.label}
                   primaryTypographyProps={{ fontWeight: active ? 700 : 500 }}
                 />
+                {item.path === "/chat" && chatUnread > 0 && (
+                  <Box
+                    sx={{
+                      ml: "auto",
+                      minWidth: 22,
+                      height: 22,
+                      px: 0.75,
+                      borderRadius: 999,
+                      bgcolor: active ? "#fff" : "error.main",
+                      color: active ? "primary.main" : "#fff",
+                      fontSize: 12,
+                      fontWeight: 800,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {chatUnread > 99 ? "99+" : chatUnread}
+                  </Box>
+                )}
               </ListItemButton>
             </Tooltip>
           );

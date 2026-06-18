@@ -1,20 +1,25 @@
 ﻿import React from 'react';
 import {
   AppBar, Toolbar, IconButton, Typography,
-  Avatar, Box, Tooltip, Menu, MenuItem as MuiMenuItem, Divider,
+  Avatar, Box, Tooltip, Menu, MenuItem as MuiMenuItem, Divider, Button,
 } from '@mui/material';
 import MenuIcon          from '@mui/icons-material/Menu';
 import LogoutIcon        from '@mui/icons-material/Logout';
+import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
 import { useAuthStore }  from '@/store/authStore';
 import { SIDEBAR_WIDTH } from '@/utils/constants';
 import { useNavigate }   from 'react-router-dom';
 import NotificationBell  from '@/components/ui/NotificationBell';
 import ChatNotificationBell from '@/components/ui/ChatNotificationBell';
+import { isAlerting, subscribeAlerting, stopAlert } from '@/utils/alertSound';
 
 export default function Topbar({ onMenuClick, title = 'Dashboard' }) {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const [alerting, setAlerting] = React.useState(isAlerting());
+
+  React.useEffect(() => subscribeAlerting(setAlerting), []);
 
   const handleLogout = () => {
     logout();
@@ -22,6 +27,31 @@ export default function Topbar({ onMenuClick, title = 'Dashboard' }) {
   };
 
   return (
+    <>
+    {/* Плавающая кнопка: видна, пока звонит сигнал нового заказа */}
+    {alerting && (
+      <Button
+        variant="contained"
+        color="error"
+        size="large"
+        startIcon={<NotificationsOffIcon />}
+        onClick={stopAlert}
+        sx={{
+          position: 'fixed',
+          bottom: 28,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 2000,
+          borderRadius: 999,
+          px: 3,
+          py: 1.25,
+          fontWeight: 800,
+          boxShadow: '0 8px 24px rgba(232,24,27,0.45)',
+        }}
+      >
+        Остановить звук
+      </Button>
+    )}
     <AppBar
       position="fixed"
       elevation={0}
@@ -69,5 +99,6 @@ export default function Topbar({ onMenuClick, title = 'Dashboard' }) {
         </Menu>
       </Toolbar>
     </AppBar>
+    </>
   );
 }
