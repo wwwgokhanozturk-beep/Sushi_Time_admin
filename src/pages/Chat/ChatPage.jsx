@@ -88,8 +88,18 @@ export default function ChatPage() {
     selectedThreadRef.current = selectedThread;
     if (selectedThread?._id) {
       markThreadRead(selectedThread._id);
+      // Сразу гасим серверный счётчик непрочитанных в кэше списка (без перезагрузки)
+      queryClient.setQueryData(['chatThreads'], (old) => {
+        if (!old?.threads) return old;
+        return {
+          ...old,
+          threads: old.threads.map((t) =>
+            t._id === selectedThread._id ? { ...t, unreadForAdmin: 0 } : t
+          ),
+        };
+      });
     }
-  }, [selectedThread, markThreadRead]);
+  }, [selectedThread, markThreadRead, queryClient]);
 
   // Auto-select thread when arriving from the chat notification bell
   useEffect(() => {
@@ -116,12 +126,15 @@ export default function ChatPage() {
 
     socket.on('chat:message', ({ thread, message, clientTempId }) => {
       const qc = queryClientRef.current;
+      // Если этот тред сейчас открыт — он считается прочитанным (бейдж не всплывает)
+      const isOpen = selectedThreadRef.current?._id === thread._id;
       qc.setQueryData(['chatThreads'], (old) => {
         const current = old?.threads || [];
         const without = current.filter((item) => item._id !== thread._id);
+        const merged = isOpen ? { ...thread, unreadForAdmin: 0 } : thread;
         return {
           ...(old || {}),
-          threads: [thread, ...without],
+          threads: [merged, ...without],
         };
       });
 
