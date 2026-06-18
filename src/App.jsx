@@ -14,6 +14,7 @@ import PromotionsPage      from '@/pages/Promotions/PromotionsPage';
 import PromotionFormPage   from '@/pages/Promotions/PromotionFormPage';
 import NotificationsPage   from '@/pages/Notifications/NotificationsPage';
 import ChatPage            from '@/pages/Chat/ChatPage';
+import SettingsPage        from '@/pages/Settings/SettingsPage';
 
 // Auth guard — redirects to /login when not authenticated
 function ProtectedRoute({ children }) {
@@ -42,6 +43,7 @@ export default function App() {
       <Route path="/promotions/:id/edit" element={<ProtectedRoute><PromotionFormPage /></ProtectedRoute>} />
       <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
       <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

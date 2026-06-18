@@ -18,6 +18,7 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import ChatIcon from "@mui/icons-material/Chat";
+import SettingsIcon from "@mui/icons-material/Settings";
 import { useNavigate, useLocation } from "react-router-dom";
 import { SIDEBAR_WIDTH } from "@/utils/constants";
 
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
   { label: "Analytics", icon: <BarChartIcon />, path: "/analytics" },
   { label: "Notifications", icon: <CampaignIcon />, path: "/notifications" },
   { label: "Chat", icon: <ChatIcon />, path: "/chat" },
+  { label: "Settings", icon: <SettingsIcon />, path: "/settings" },
 ];
 
 export default function Sidebar({ mobileOpen, onClose }) {
