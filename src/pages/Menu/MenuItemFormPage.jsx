@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import {
-  Box, Card, CardContent, Grid, Typography, TextField, Button,
+  Box, Card, CardContent, Grid, Typography, TextField, Button, IconButton,
   FormControl, InputLabel, Select, MenuItem, Switch, FormControlLabel,
   CircularProgress, Alert, Chip, InputAdornment, Tabs, Tab,
 } from '@mui/material';
@@ -15,9 +15,11 @@ import { menuService } from '@/services/menuService';
 import ImageFrameEditor from '@/components/ImageFrameEditor';
 import toast from 'react-hot-toast';
 
+const MAX_IMAGES = 3;
+
 const EMPTY = {
   name: '', category: 'rolls', price: '',
-  imageUrl: '', imageScale: 1, imageOffsetX: 0, imageOffsetY: 0,
+  images: [], imageUrl: '', imageScale: 1, imageOffsetX: 0, imageOffsetY: 0,
   preparationTime: '15', calories: '0', isAvailable: true,
   stock: '',   // '' = unlimited (null); number = tracked quantity
   // per-language fields
@@ -43,6 +45,7 @@ export default function MenuItemFormPage() {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef(null);
 
+  // Загрузка файла — добавляет фото в массив (до MAX_IMAGES)
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -51,7 +54,7 @@ export default function MenuItemFormPage() {
       const { data } = await menuService.uploadImage(file);
       const url = data?.data?.url || data?.url;
       if (url) {
-        setForm((prev) => ({ ...prev, imageUrl: url }));
+        setForm((prev) => ({ ...prev, images: [...prev.images, url].slice(0, MAX_IMAGES) }));
         toast.success('Image uploaded');
       }
     } catch {
@@ -62,6 +65,9 @@ export default function MenuItemFormPage() {
     }
   };
 
+  const removeImage = (idx) =>
+    setForm((prev) => ({ ...prev, images: prev.images.filter((_, i) => i !== idx) }));
+
   useEffect(() => {
     if (existing) {
       setForm({
@@ -71,6 +77,7 @@ export default function MenuItemFormPage() {
         description_tr: existing.description_tr || '',
         category: existing.category || 'rolls',
         price: String(existing.price ?? ''),
+        images: existing.images?.length ? existing.images : (existing.imageUrl ? [existing.imageUrl] : []),
         imageUrl: existing.imageUrl || '',
         imageScale: existing.imageScale ?? 1,
         imageOffsetX: existing.imageOffsetX ?? 0,
@@ -115,7 +122,8 @@ export default function MenuItemFormPage() {
       description_tr: form.description_tr.trim(),
       category: form.category,
       price: Number(form.price),
-      imageUrl: form.imageUrl.trim(),
+      images: form.images.filter(Boolean).slice(0, MAX_IMAGES),
+      imageUrl: (form.images.filter(Boolean)[0] || '').trim(),
       imageScale: Number(form.imageScale) || 1,
       imageOffsetX: Number(form.imageOffsetX) || 0,
       imageOffsetY: Number(form.imageOffsetY) || 0,
@@ -221,34 +229,97 @@ export default function MenuItemFormPage() {
                 </Box>
               </Grid>
 
-              {/* Image URL + Upload */}
+              {/* Photos — up to 3 (карусель в меню листает их каждые 5с) */}
               <Grid item xs={12}>
-                <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-                  <TextField fullWidth label="Image URL" value={form.imageUrl}
-                    onChange={set('imageUrl')} placeholder="https://example.com/image.jpg" />
+                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+                  Фото блюда (до {MAX_IMAGES}) — в меню листаются каждые 5 сек
+                </Typography>
+
+                <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
+                  {form.images.map((url, idx) => (
+                    <Box
+                      key={idx}
+                      sx={{
+                        position: 'relative', width: 84, height: 84, borderRadius: 2,
+                        overflow: 'hidden', border: '1px solid #E5E7EB', flexShrink: 0,
+                      }}
+                    >
+                      <img src={url} alt={`photo ${idx + 1}`}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      {idx === 0 && (
+                        <Box sx={{
+                          position: 'absolute', bottom: 0, left: 0, right: 0,
+                          bgcolor: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 10,
+                          fontWeight: 700, textAlign: 'center', py: 0.25,
+                        }}>
+                          Главное
+                        </Box>
+                      )}
+                      <IconButton
+                        size="small"
+                        onClick={() => removeImage(idx)}
+                        sx={{
+                          position: 'absolute', top: 2, right: 2, width: 22, height: 22,
+                          bgcolor: 'rgba(0,0,0,0.55)', color: '#fff',
+                          '&:hover': { bgcolor: 'error.main' },
+                        }}
+                      >
+                        <span style={{ fontSize: 14, lineHeight: 1 }}>×</span>
+                      </IconButton>
+                    </Box>
+                  ))}
+
+                  {form.images.length < MAX_IMAGES && (
+                    <Button
+                      variant="outlined"
+                      component="label"
+                      disabled={uploading}
+                      sx={{
+                        width: 84, height: 84, minWidth: 84, flexShrink: 0, flexDirection: 'column',
+                        gap: 0.5, borderStyle: 'dashed', borderRadius: 2,
+                      }}
+                    >
+                      {uploading ? <CircularProgress size={18} /> : <UploadIcon fontSize="small" />}
+                      <span style={{ fontSize: 11 }}>{uploading ? '...' : 'Добавить'}</span>
+                      <input
+                        type="file"
+                        hidden
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        onChange={handleFileUpload}
+                        ref={fileRef}
+                      />
+                    </Button>
+                  )}
+                </Box>
+
+                {/* Manual URL add */}
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 1.5 }}>
+                  <TextField
+                    fullWidth size="small" label="…или вставить URL фото"
+                    value={form.imageUrl}
+                    onChange={set('imageUrl')}
+                    placeholder="https://example.com/image.jpg"
+                    disabled={form.images.length >= MAX_IMAGES}
+                  />
                   <Button
                     variant="outlined"
-                    component="label"
-                    disabled={uploading}
-                    startIcon={uploading ? <CircularProgress size={16} /> : <UploadIcon />}
-                    sx={{ minWidth: 120, height: 56, flexShrink: 0 }}
+                    disabled={!form.imageUrl.trim() || form.images.length >= MAX_IMAGES}
+                    onClick={() => setForm((prev) => ({
+                      ...prev,
+                      images: [...prev.images, prev.imageUrl.trim()].slice(0, MAX_IMAGES),
+                      imageUrl: '',
+                    }))}
+                    sx={{ flexShrink: 0 }}
                   >
-                    {uploading ? 'Uploading…' : 'Upload'}
-                    <input
-                      type="file"
-                      hidden
-                      accept="image/jpeg,image/png,image/webp,image/gif"
-                      onChange={handleFileUpload}
-                      ref={fileRef}
-                    />
+                    Добавить URL
                   </Button>
                 </Box>
 
-                {/* Фото-редактор: рамка + зум + перетаскивание */}
-                {form.imageUrl ? (
+                {/* Фото-редактор: рамка + зум + перетаскивание (применяется ко всем фото) */}
+                {form.images[0] ? (
                   <Box sx={{ mt: 2 }}>
                     <ImageFrameEditor
-                      imageUrl={form.imageUrl}
+                      imageUrl={form.images[0]}
                       scale={Number(form.imageScale) || 1}
                       offsetX={Number(form.imageOffsetX) || 0}
                       offsetY={Number(form.imageOffsetY) || 0}
