@@ -23,7 +23,7 @@ export function useOrders(params = {}) {
       if (!seenOrderIds.current.has(order?._id)) {
         seenOrderIds.current.add(order?._id);
         toast.success(
-          `🔔 New order #${orderId || '???'} \u2014 ${order?.totalPrice ?? ''} ₺`,
+          `🔔 Yeni sipariş #${orderId || '???'} \u2014 ${order?.totalPrice ?? ''} ₺`,
           { duration: 8000, style: { maxWidth: 380 } }
         );
       }
@@ -39,7 +39,7 @@ export function useOrders(params = {}) {
       if (order.loyaltyDiscountApplied && !seenDiscountIds.current.has(order._id)) {
         seenDiscountIds.current.add(order._id);
         toast.success(
-          `🎉 Loyalty discount applied!\n${order.customerName} — order #${order._id.slice(-6).toUpperCase()} (−${order.discountAmount} TRY)`,
+          `🎉 Sadakat indirimi uygulandı!\n${order.customerName} — sipariş #${order._id.slice(-6).toUpperCase()} (−${order.discountAmount} ₺)`,
           { duration: 6000, style: { maxWidth: 380 } }
         );
       }
@@ -63,9 +63,9 @@ export function useUpdateOrderStatus() {
     mutationFn: ({ id, status }) => orderService.updateStatus(id, status),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['orders'] });
-      toast.success('Order status updated');
+      toast.success('Sipariş durumu güncellendi');
     },
-    onError: (err) => toast.error(err.response?.data?.message || 'Update failed'),
+    onError: (err) => toast.error(err.response?.data?.message || 'Güncelleme başarısız'),
   });
 }
 
@@ -75,8 +75,8 @@ export function useCancelOrder() {
     mutationFn: (id) => orderService.cancel(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['orders'] });
-      toast.success('Order cancelled');
+      toast.success('Sipariş iptal edildi');
     },
-    onError: (err) => toast.error(err.response?.data?.message || 'Cancel failed'),
+    onError: (err) => toast.error(err.response?.data?.message || 'İptal başarısız'),
   });
 }

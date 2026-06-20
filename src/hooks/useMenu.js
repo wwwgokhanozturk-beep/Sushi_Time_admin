@@ -24,8 +24,8 @@ export function useCreateMenuItem() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data) => menuService.create(data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['menu'] }); toast.success('Item created'); },
-    onError:   (err) => toast.error(err.response?.data?.message || 'Create failed'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['menu'] }); toast.success('Ürün oluşturuldu'); },
+    onError:   (err) => toast.error(err.response?.data?.message || 'Oluşturma başarısız'),
   });
 }
 
@@ -33,8 +33,8 @@ export function useUpdateMenuItem() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }) => menuService.update(id, data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['menu'] }); toast.success('Item updated'); },
-    onError:   (err) => toast.error(err.response?.data?.message || 'Update failed'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['menu'] }); toast.success('Ürün güncellendi'); },
+    onError:   (err) => toast.error(err.response?.data?.message || 'Güncelleme başarısız'),
   });
 }
 
@@ -42,7 +42,7 @@ export function useDeleteMenuItem() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id) => menuService.remove(id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['menu'] }); toast.success('Item deleted'); },
-    onError:   (err) => toast.error(err.response?.data?.message || 'Delete failed'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['menu'] }); toast.success('Ürün silindi'); },
+    onError:   (err) => toast.error(err.response?.data?.message || 'Silme başarısız'),
   });
 }

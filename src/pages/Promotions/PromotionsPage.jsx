@@ -19,16 +19,16 @@ const BADGE_COLORS = {
 };
 
 function promoStatus(promo) {
-  if (!promo.isActive) return { label: 'Inactive', color: 'default' };
+  if (!promo.isActive) return { label: 'Pasif', color: 'default' };
   const now = new Date();
-  if (promo.validTo && new Date(promo.validTo) < now) return { label: 'Expired', color: 'error' };
-  if (promo.validFrom && new Date(promo.validFrom) > now) return { label: 'Scheduled', color: 'info' };
-  return { label: 'Active', color: 'success' };
+  if (promo.validTo && new Date(promo.validTo) < now) return { label: 'Süresi doldu', color: 'error' };
+  if (promo.validFrom && new Date(promo.validFrom) > now) return { label: 'Planlandı', color: 'info' };
+  return { label: 'Aktif', color: 'success' };
 }
 
 function fmtDate(d) {
   if (!d) return '—';
-  return new Date(d).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return new Date(d).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 export default function PromotionsPage() {
@@ -47,10 +47,10 @@ export default function PromotionsPage() {
   };
 
   return (
-    <PageLayout title="Promotions">
+    <PageLayout title="Kampanyalar">
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
         <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/promotions/new')}>
-          Add Promotion
+          Kampanya Ekle
         </Button>
       </Box>
 
@@ -58,7 +58,7 @@ export default function PromotionsPage() {
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}><CircularProgress /></Box>
       ) : promos.length === 0 ? (
         <Typography color="text.secondary" sx={{ textAlign: 'center', mt: 6 }}>
-          No promotions yet. Create the first one!
+          Henüz kampanya yok. İlkini oluşturun!
         </Typography>
       ) : (
         <Grid container spacing={2}>
@@ -97,13 +97,13 @@ export default function PromotionsPage() {
 
                     {promo.discountPercent != null && (
                       <Typography variant="body2" color="primary" fontWeight={700}>
-                        −{promo.discountPercent}% off
+                        −%{promo.discountPercent} indirim
                       </Typography>
                     )}
 
                     {promo.promoCode && (
                       <Typography variant="body2" color="text.secondary">
-                        Code: <strong>{promo.promoCode}</strong>
+                        Kod: <strong>{promo.promoCode}</strong>
                       </Typography>
                     )}
 
@@ -120,12 +120,12 @@ export default function PromotionsPage() {
                         disabled={updateMut.isPending}
                       />
                       <Box>
-                        <Tooltip title="Edit">
+                        <Tooltip title="Düzenle">
                           <IconButton size="small" onClick={() => navigate(`/promotions/${promo._id}/edit`)}>
                             <EditIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="Delete">
+                        <Tooltip title="Sil">
                           <IconButton size="small" color="error" onClick={() => setDeleteId(promo._id)}>
                             <DeleteIcon fontSize="small" />
                           </IconButton>
@@ -141,14 +141,14 @@ export default function PromotionsPage() {
       )}
 
       <Dialog open={Boolean(deleteId)} onClose={() => setDeleteId(null)}>
-        <DialogTitle>Delete Promotion</DialogTitle>
+        <DialogTitle>Kampanyayı Sil</DialogTitle>
         <DialogContent>
-          <Typography>Are you sure you want to delete this promotion? This action cannot be undone.</Typography>
+          <Typography>Bu kampanyayı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteId(null)}>Cancel</Button>
+          <Button onClick={() => setDeleteId(null)}>İptal</Button>
           <Button variant="contained" color="error" onClick={handleDelete} disabled={deleteMut.isPending}>
-            {deleteMut.isPending ? <CircularProgress size={20} /> : 'Delete'}
+            {deleteMut.isPending ? <CircularProgress size={20} /> : 'Sil'}
           </Button>
         </DialogActions>
       </Dialog>

@@ -19,11 +19,11 @@ export default function NotificationBell() {
   const handlers = useMemo(() => ({
     'order:new': (data) => {
       add(
-        `Новый заказ от ${data.customerName} — ${data.totalPrice} TRY`,
+        `Yeni sipariş: ${data.customerName} — ${data.totalPrice} ₺`,
         'order',
         { orderId: data.orderId }
       );
-      toast.success(`🍣 Новый заказ от ${data.customerName}!`, { duration: 5000 });
+      toast.success(`🍣 Yeni sipariş: ${data.customerName}!`, { duration: 5000 });
       // Ring repeatedly (~1 min) until the admin acknowledges the new order.
       startAlert('order');
     },
@@ -63,16 +63,16 @@ export default function NotificationBell() {
         PaperProps={{ sx: { width: 360, maxHeight: 440, borderRadius: 2 } }}
       >
         <Box sx={{ px: 2, py: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="subtitle1" fontWeight={700}>Уведомления</Typography>
+          <Typography variant="subtitle1" fontWeight={700}>Bildirimler</Typography>
           {unreadCount > 0 && (
-            <Button size="small" onClick={handleMarkAllRead}>Прочитать все</Button>
+            <Button size="small" onClick={handleMarkAllRead}>Tümünü okundu işaretle</Button>
           )}
         </Box>
         <Divider />
 
         {notifications.length === 0 ? (
           <Box sx={{ p: 3, textAlign: 'center' }}>
-            <Typography variant="body2" color="text.secondary">Нет уведомлений</Typography>
+            <Typography variant="body2" color="text.secondary">Bildirim yok</Typography>
           </Box>
         ) : (
           <List dense sx={{ py: 0, maxHeight: 350, overflow: 'auto' }}>
@@ -84,7 +84,7 @@ export default function NotificationBell() {
               >
                 <ListItemText
                   primary={n.msg}
-                  secondary={n.createdAt ? new Date(n.createdAt).toLocaleString('ru-RU') : ''}
+                  secondary={n.createdAt ? new Date(n.createdAt).toLocaleString('tr-TR') : ''}
                   primaryTypographyProps={{ variant: 'body2', fontWeight: n.read ? 400 : 600 }}
                 />
               </ListItemButton>
@@ -95,7 +95,7 @@ export default function NotificationBell() {
         <Divider />
         <Box sx={{ p: 1, textAlign: 'center' }}>
           <Button size="small" onClick={() => { navigate('/notifications'); handleClose(); }}>
-            Все уведомления
+            Tüm bildirimler
           </Button>
         </Box>
       </Popover>

@@ -17,12 +17,12 @@ export const STATUS_COLORS = {
 };
 
 export const STATUS_LABELS = {
-  pending: "Pending",
-  confirmed: "Confirmed",
-  preparing: "Preparing",
-  en_route: "En Route",
-  delivered: "Delivered",
-  cancelled: "Cancelled",
+  pending: "Beklemede",
+  confirmed: "Onaylandı",
+  preparing: "Hazırlanıyor",
+  en_route: "Yolda",
+  delivered: "Teslim Edildi",
+  cancelled: "İptal Edildi",
 };
 
 export const MENU_CATEGORIES = [

@@ -26,9 +26,9 @@ function useToggleDriver() {
     mutationFn: ({ id, isActive }) => userService.updateUser(id, { isActive }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['drivers'] });
-      toast.success('Driver status updated');
+      toast.success('Kurye durumu güncellendi');
     },
-    onError: (err) => toast.error(err.response?.data?.message || 'Update failed'),
+    onError: (err) => toast.error(err.response?.data?.message || 'Güncelleme başarısız'),
   });
 }
 
@@ -48,14 +48,14 @@ export default function DriversPage() {
   });
 
   return (
-    <PageLayout title="Drivers">
+    <PageLayout title="Kuryeler">
       <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
         <LocalShippingIcon sx={{ fontSize: 32, color: 'primary.main' }} />
-        <Typography variant="h5" fontWeight={700}>Delivery Drivers</Typography>
+        <Typography variant="h5" fontWeight={700}>Teslimat Kuryeleri</Typography>
         <Box sx={{ ml: 'auto' }}>
           <TextField
             size="small"
-            placeholder="Search drivers…"
+            placeholder="Kurye ara…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             InputProps={{
@@ -76,7 +76,7 @@ export default function DriversPage() {
       )}
 
       {isError && (
-        <Alert severity="error" sx={{ mt: 2 }}>Failed to load drivers.</Alert>
+        <Alert severity="error" sx={{ mt: 2 }}>Kuryeler yüklenemedi.</Alert>
       )}
 
       {!isLoading && !isError && (
@@ -86,18 +86,18 @@ export default function DriversPage() {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell><strong>Name</strong></TableCell>
-                    <TableCell><strong>Email</strong></TableCell>
-                    <TableCell><strong>Phone</strong></TableCell>
-                    <TableCell><strong>Status</strong></TableCell>
-                    <TableCell align="right"><strong>Actions</strong></TableCell>
+                    <TableCell><strong>Ad</strong></TableCell>
+                    <TableCell><strong>E-posta</strong></TableCell>
+                    <TableCell><strong>Telefon</strong></TableCell>
+                    <TableCell><strong>Durum</strong></TableCell>
+                    <TableCell align="right"><strong>İşlemler</strong></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {filtered.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={5} align="center" sx={{ py: 6, color: 'text.secondary' }}>
-                        {search ? 'No drivers match your search.' : 'No drivers found. Assign the "driver" role to users via the backend.'}
+                        {search ? 'Aramanızla eşleşen kurye yok.' : 'Kurye bulunamadı. Kullanıcılara backend üzerinden "driver" rolü atayın.'}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -117,7 +117,7 @@ export default function DriversPage() {
                         </TableCell>
                         <TableCell>
                           <Chip
-                            label={driver.isActive !== false ? 'Active' : 'Inactive'}
+                            label={driver.isActive !== false ? 'Aktif' : 'Pasif'}
                             color={driver.isActive !== false ? 'success' : 'default'}
                             size="small"
                             variant="outlined"
@@ -125,7 +125,7 @@ export default function DriversPage() {
                         </TableCell>
                         <TableCell align="right">
                           {driver.isActive !== false ? (
-                            <Tooltip title="Deactivate driver">
+                            <Tooltip title="Kuryeyi pasifleştir">
                               <IconButton
                                 size="small"
                                 color="error"
@@ -136,7 +136,7 @@ export default function DriversPage() {
                               </IconButton>
                             </Tooltip>
                           ) : (
-                            <Tooltip title="Activate driver">
+                            <Tooltip title="Kuryeyi aktifleştir">
                               <IconButton
                                 size="small"
                                 color="success"

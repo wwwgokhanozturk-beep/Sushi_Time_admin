@@ -29,7 +29,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) return toast.error("Fill in all fields");
+    if (!email || !password) return toast.error("Tüm alanları doldurun");
 
     setLoading(true);
     try {
@@ -37,10 +37,10 @@ export default function LoginPage() {
       const token = data.data?.token;
       if (!token) throw new Error("Authentication failed: no token received");
       login(data.data?.user ?? { name: "Admin", email }, token);
-      toast.success("Welcome back!");
+      toast.success("Tekrar hoş geldiniz!");
       navigate("/");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Invalid credentials");
+      toast.error(err.response?.data?.message || "Geçersiz bilgiler");
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,7 @@ export default function LoginPage() {
               🍣 Sushi Time
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              Admin Panel — Sign in to continue
+              Yönetim Paneli — Devam etmek için giriş yapın
             </Typography>
           </Box>
 
@@ -98,7 +98,7 @@ export default function LoginPage() {
             />
             <TextField
               fullWidth
-              label="Password"
+              label="Şifre"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               type={showPw ? "text" : "password"}
@@ -129,7 +129,7 @@ export default function LoginPage() {
               {loading ? (
                 <CircularProgress size={22} color="inherit" />
               ) : (
-                "Sign In"
+                "Giriş Yap"
               )}
             </Button>
           </form>
@@ -139,7 +139,7 @@ export default function LoginPage() {
             color="text.secondary"
             sx={{ display: "block", mt: 3, textAlign: "center" }}
           >
-            Sushi Time Admin Panel
+            Sushi Time Yönetim Paneli
           </Typography>
         </CardContent>
       </Card>

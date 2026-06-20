@@ -36,14 +36,14 @@ export default function DashboardPage() {
   const weeklyData     = buildWeeklyRevenue(orders);
 
   return (
-    <PageLayout title="Dashboard">
+    <PageLayout title="Panel">
       {/* ── Stat cards ─────────────────────────────── */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         {[
-          { title: 'Total Orders',  value: isLoading ? '…' : orders.length,              icon: <ShoppingBagIcon />,    color: 'secondary', trend: 12 },
-          { title: 'Revenue (all)', value: isLoading ? '…' : formatPrice(totalRevenue), icon: <AttachMoneyIcon />,  color: 'success',   trend: 8  },
-          { title: 'Pending',       value: isLoading ? '…' : pendingOrders,               icon: <PendingActionsIcon />, color: 'warning',   trend: -3 },
-          { title: 'Delivered',     value: isLoading ? '…' : deliveredOrders,             icon: <CheckCircleIcon />,    color: 'primary',   trend: 15 },
+          { title: 'Toplam Sipariş', value: isLoading ? '…' : orders.length,              icon: <ShoppingBagIcon />,    color: 'secondary', trend: 12 },
+          { title: 'Gelir (toplam)', value: isLoading ? '…' : formatPrice(totalRevenue), icon: <AttachMoneyIcon />,  color: 'success',   trend: 8  },
+          { title: 'Bekleyen',       value: isLoading ? '…' : pendingOrders,               icon: <PendingActionsIcon />, color: 'warning',   trend: -3 },
+          { title: 'Teslim Edilen',  value: isLoading ? '…' : deliveredOrders,             icon: <CheckCircleIcon />,    color: 'primary',   trend: 15 },
         ].map((s) => (
           <Grid item xs={12} sm={6} lg={3} key={s.title}>
             <StatCard {...s} loading={isLoading} />
@@ -60,12 +60,12 @@ export default function DashboardPage() {
         <Grid item xs={12} md={5}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
-              <Typography variant="h6" fontWeight={700} gutterBottom>Recent Orders</Typography>
+              <Typography variant="h6" fontWeight={700} gutterBottom>Son Siparişler</Typography>
               <Divider sx={{ mb: 1.5 }} />
               {isLoading ? (
-                <Typography color="text.secondary">Loading…</Typography>
+                <Typography color="text.secondary">Yükleniyor…</Typography>
               ) : recent.length === 0 ? (
-                <Typography color="text.secondary">No orders yet</Typography>
+                <Typography color="text.secondary">Henüz sipariş yok</Typography>
               ) : (
                 recent.map((order) => (
                   <Box key={order._id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1, borderBottom: '1px solid #F3F4F6' }}>

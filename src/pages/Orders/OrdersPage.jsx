@@ -14,6 +14,7 @@ import OrderStatusBadge from './components/OrderStatusBadge';
 import { useOrders }  from '@/hooks/useOrders';
 import { usePrintReceipt } from '@/hooks/usePrintReceipt';
 import { formatPrice } from '@/utils/formatters';
+import { STATUS_LABELS } from '@/utils/constants';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 
@@ -70,7 +71,7 @@ export default function OrdersPage() {
   };
 
   return (
-    <PageLayout title="Orders">
+    <PageLayout title="Siparişler">
       <Card>
         {/* ── Filter tabs ── */}
         <Tabs
@@ -81,26 +82,26 @@ export default function OrdersPage() {
           sx={{ borderBottom: '1px solid #E5E7EB', px: 2, pt: 1 }}
         >
           {STATUS_TABS.map((s) => (
-            <Tab key={s} label={s === 'all' ? 'All' : s.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())} />
+            <Tab key={s} label={s === 'all' ? 'Tümü' : (STATUS_LABELS[s] || s)} />
           ))}
         </Tabs>
 
         {/* ── Search + refresh ── */}
         <Box sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
           <TextField
-            size="small" placeholder="Search by name, phone, ID…" value={search}
+            size="small" placeholder="İsim, telefon, ID ile ara…" value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
             InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
             sx={{ maxWidth: 320, flex: 1 }}
           />
-          <Tooltip title="Refresh">
+          <Tooltip title="Yenile">
             <span>
               <IconButton onClick={() => refetch()} disabled={isFetching}>
                 {isFetching ? <CircularProgress size={20} /> : <RefreshIcon />}
               </IconButton>
             </span>
           </Tooltip>
-          <Tooltip title="Export filtered orders to CSV">
+          <Tooltip title="Filtrelenen siparişleri CSV'ye aktar">
             <span>
               <Button
                 startIcon={<DownloadIcon />}
@@ -109,12 +110,12 @@ export default function OrdersPage() {
                 size="small"
                 variant="outlined"
               >
-                Export CSV
+                CSV'ye Aktar
               </Button>
             </span>
           </Tooltip>
           <Typography variant="body2" color="text.secondary">
-            {filtered.length} order{filtered.length !== 1 ? 's' : ''}
+            {filtered.length} sipariş
           </Typography>
         </Box>
 
@@ -123,7 +124,7 @@ export default function OrdersPage() {
           <Table size="small">
             <TableHead>
               <TableRow sx={{ bgcolor: '#F9FAFB' }}>
-                {['Order ID', 'Customer', 'Phone', 'Items', 'Total', 'Status', 'Date', ''].map((h) => (
+                {['Sipariş No', 'Müşteri', 'Telefon', 'Ürünler', 'Toplam', 'Durum', 'Tarih', ''].map((h) => (
                   <TableCell key={h} sx={{ fontWeight: 700, fontSize: 13 }}>{h}</TableCell>
                 ))}
               </TableRow>
@@ -132,7 +133,7 @@ export default function OrdersPage() {
               {isLoading ? (
                 <TableRow><TableCell colSpan={8} align="center" sx={{ py: 4 }}><CircularProgress /></TableCell></TableRow>
               ) : paginated.length === 0 ? (
-                <TableRow><TableCell colSpan={8} align="center" sx={{ py: 4, color: 'text.secondary' }}>No orders found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} align="center" sx={{ py: 4, color: 'text.secondary' }}>Sipariş bulunamadı</TableCell></TableRow>
               ) : paginated.map((order) => (
                 <TableRow key={order._id} hover sx={{ cursor: 'pointer' }}
                   onClick={() => navigate(`/orders/${order._id}`)}>
@@ -142,7 +143,7 @@ export default function OrdersPage() {
                   <TableCell sx={{ fontWeight: 600 }}>{order.customerName}</TableCell>
                   <TableCell>{order.phone}</TableCell>
                   <TableCell>
-                    <Chip label={`${order.items?.length ?? 0} items`} size="small" variant="outlined" />
+                    <Chip label={`${order.items?.length ?? 0} ürün`} size="small" variant="outlined" />
                   </TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>{formatPrice(order.totalPrice)}</TableCell>
                   <TableCell><OrderStatusBadge status={order.status} /></TableCell>
@@ -151,7 +152,7 @@ export default function OrdersPage() {
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      <Tooltip title="View details">
+                      <Tooltip title="Detayları gör">
                         <IconButton size="small" onClick={(e) => { e.stopPropagation(); navigate(`/orders/${order._id}`); }}>
                           <VisibilityIcon fontSize="small" />
                         </IconButton>

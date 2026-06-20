@@ -69,9 +69,9 @@ export default function PromotionFormPage() {
 
   const validate = () => {
     const errs = {};
-    if (!form.title.trim()) errs.title = 'Title (EN) is required';
+    if (!form.title.trim()) errs.title = 'Başlık (EN) gerekli';
     if (form.discountPercent !== '' && (isNaN(form.discountPercent) || Number(form.discountPercent) < 0 || Number(form.discountPercent) > 100))
-      errs.discountPercent = 'Must be 0–100';
+      errs.discountPercent = '0–100 arası olmalı';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -106,13 +106,13 @@ export default function PromotionFormPage() {
   const saving = createMut.isPending || updateMut.isPending;
 
   if (isEdit && loadingItem) {
-    return <PageLayout title="Loading…"><Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}><CircularProgress /></Box></PageLayout>;
+    return <PageLayout title="Yükleniyor…"><Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}><CircularProgress /></Box></PageLayout>;
   }
 
   return (
-    <PageLayout title={isEdit ? 'Edit Promotion' : 'New Promotion'}>
+    <PageLayout title={isEdit ? 'Kampanyayı Düzenle' : 'Yeni Kampanya'}>
       <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/promotions')} sx={{ mb: 2 }}>
-        Back to Promotions
+        Kampanyalara Dön
       </Button>
 
       <Card sx={{ maxWidth: 720, mx: 'auto' }}>
@@ -123,7 +123,7 @@ export default function PromotionFormPage() {
               {/* Titles — tabbed per language */}
               <Grid item xs={12}>
                 <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                  Title &amp; Description
+                  Başlık ve Açıklama
                 </Typography>
                 <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
                   <Tabs value={langTab} onChange={(_, v) => setLangTab(v)}
@@ -135,17 +135,17 @@ export default function PromotionFormPage() {
 
                   {langTab === 0 && (
                     <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <TextField fullWidth label="Title (EN)" value={form.title}
+                      <TextField fullWidth label="Başlık (EN)" value={form.title}
                         onChange={set('title')} error={!!errors.title} helperText={errors.title} required />
-                      <TextField fullWidth label="Description (EN)" value={form.description}
+                      <TextField fullWidth label="Açıklama (EN)" value={form.description}
                         onChange={set('description')} multiline minRows={2} maxRows={4} />
                     </Box>
                   )}
                   {langTab === 1 && (
                     <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <TextField fullWidth label="Заголовок (RU)" value={form.title_ru}
+                      <TextField fullWidth label="Başlık (RU)" value={form.title_ru}
                         onChange={set('title_ru')} />
-                      <TextField fullWidth label="Описание (RU)" value={form.description_ru}
+                      <TextField fullWidth label="Açıklama (RU)" value={form.description_ru}
                         onChange={set('description_ru')} multiline minRows={2} maxRows={4} />
                     </Box>
                   )}
@@ -167,7 +167,7 @@ export default function PromotionFormPage() {
               </Grid>
               {form.imageUrl && (
                 <Grid item xs={12}>
-                  <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>Preview</Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>Önizleme</Typography>
                   <Box component="img" src={form.imageUrl} alt="preview"
                     sx={{ width: '100%', maxHeight: 180, borderRadius: 2, objectFit: 'cover' }}
                     onError={(e) => { e.target.style.display = 'none'; }} />
@@ -177,16 +177,16 @@ export default function PromotionFormPage() {
               {/* Badge + Discount */}
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel>Badge</InputLabel>
-                  <Select value={form.badge} label="Badge" onChange={set('badge')}>
+                  <InputLabel>Rozet</InputLabel>
+                  <Select value={form.badge} label="Rozet" onChange={set('badge')}>
                     {BADGES.map((b) => (
-                      <MenuItem key={b} value={b}>{b || '— None —'}</MenuItem>
+                      <MenuItem key={b} value={b}>{b || '— Yok —'}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Discount %" value={form.discountPercent}
+                <TextField fullWidth label="İndirim %" value={form.discountPercent}
                   onChange={set('discountPercent')} type="number"
                   error={!!errors.discountPercent} helperText={errors.discountPercent}
                   inputProps={{ min: 0, max: 100, step: 1 }}
@@ -196,7 +196,7 @@ export default function PromotionFormPage() {
 
               {/* Promo code */}
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Promo Code" value={form.promoCode}
+                <TextField fullWidth label="Promosyon Kodu" value={form.promoCode}
                   onChange={set('promoCode')} placeholder="SUMMER20"
                   inputProps={{ style: { textTransform: 'uppercase' } }} />
               </Grid>
@@ -205,18 +205,18 @@ export default function PromotionFormPage() {
               <Grid item xs={12} sm={6} sx={{ display: 'flex', alignItems: 'center' }}>
                 <FormControlLabel
                   control={<Switch checked={form.isActive} onChange={set('isActive')} color="success" />}
-                  label="Active"
+                  label="Aktif"
                 />
               </Grid>
 
               {/* Dates */}
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Valid From" value={form.validFrom}
+                <TextField fullWidth label="Başlangıç" value={form.validFrom}
                   onChange={set('validFrom')} type="date"
                   InputLabelProps={{ shrink: true }} />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Valid To" value={form.validTo}
+                <TextField fullWidth label="Bitiş" value={form.validTo}
                   onChange={set('validTo')} type="date"
                   InputLabelProps={{ shrink: true }} />
               </Grid>
@@ -228,7 +228,7 @@ export default function PromotionFormPage() {
                   disabled={saving}
                   sx={{ py: 1.5, fontWeight: 700 }}
                 >
-                  {isEdit ? 'Update Promotion' : 'Create Promotion'}
+                  {isEdit ? 'Kampanyayı Güncelle' : 'Kampanya Oluştur'}
                 </Button>
               </Grid>
             </Grid>

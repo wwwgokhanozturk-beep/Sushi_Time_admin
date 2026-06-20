@@ -13,7 +13,7 @@ import OrderStatusBadge from './components/OrderStatusBadge';
 import { useOrder, useUpdateOrderStatus, useCancelOrder } from '@/hooks/useOrders';
 import { usePrintReceipt } from '@/hooks/usePrintReceipt';
 import { formatPrice } from '@/utils/formatters';
-import { ORDER_STATUSES } from '@/utils/constants';
+import { ORDER_STATUSES, STATUS_LABELS } from '@/utils/constants';
 import dayjs from 'dayjs';
 
 function Row({ label, value, strong, color }) {
@@ -39,7 +39,7 @@ export default function OrderDetailPage() {
 
   if (isLoading) {
     return (
-      <PageLayout title="Order Details">
+      <PageLayout title="Sipariş Detayı">
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
           <CircularProgress />
         </Box>
@@ -49,12 +49,12 @@ export default function OrderDetailPage() {
 
   if (isError || !order) {
     return (
-      <PageLayout title="Order Details">
+      <PageLayout title="Sipariş Detayı">
         <Card>
           <CardContent sx={{ textAlign: 'center', py: 6 }}>
-            <Typography color="text.secondary">Order not found.</Typography>
+            <Typography color="text.secondary">Sipariş bulunamadı.</Typography>
             <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/orders')} sx={{ mt: 2 }}>
-              Back to Orders
+              Siparişlere Dön
             </Button>
           </CardContent>
         </Card>
@@ -68,10 +68,10 @@ export default function OrderDetailPage() {
 
   const address = [
     order.address,
-    order.buildingName && `Building: ${order.buildingName}`,
-    order.floor && `Floor: ${order.floor}`,
-    order.apartment && `Apt: ${order.apartment}`,
-    order.doorCode && `Door code: ${order.doorCode}`,
+    order.buildingName && `Bina: ${order.buildingName}`,
+    order.floor && `Kat: ${order.floor}`,
+    order.apartment && `Daire: ${order.apartment}`,
+    order.doorCode && `Kapı kodu: ${order.doorCode}`,
   ].filter(Boolean).join(', ');
 
   const handleStatusChange = (e) => {
@@ -79,31 +79,31 @@ export default function OrderDetailPage() {
   };
 
   const handleCancel = () => {
-    if (window.confirm('Cancel this order? This cannot be undone.')) {
+    if (window.confirm('Bu siparişi iptal et? Bu işlem geri alınamaz.')) {
       cancelOrder.mutate(order._id);
     }
   };
 
   return (
-    <PageLayout title="Order Details">
+    <PageLayout title="Sipariş Detayı">
       {/* ── Header ── */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
-        <Tooltip title="Back to orders">
+        <Tooltip title="Siparişlere dön">
           <IconButton onClick={() => navigate('/orders')}><ArrowBackIcon /></IconButton>
         </Tooltip>
         <Typography variant="h5" sx={{ fontWeight: 800, fontFamily: 'monospace' }}>#{shortId}</Typography>
         <OrderStatusBadge status={order.status} />
         {order.loyaltyDiscountApplied && (
-          <Chip label="🎉 Loyalty discount" color="success" size="small" variant="outlined" />
+          <Chip label="🎉 Sadakat indirimi" color="success" size="small" variant="outlined" />
         )}
         <Box sx={{ flex: 1 }} />
         <Button startIcon={<PrintIcon />} variant="outlined" size="small" onClick={() => printReceipt(order)}>
-          Print receipt
+          Fiş yazdır
         </Button>
         {!isCancelled && !isDelivered && (
           <Button startIcon={<CancelIcon />} variant="outlined" color="error" size="small"
             onClick={handleCancel} disabled={cancelOrder.isPending}>
-            Cancel order
+            Siparişi iptal et
           </Button>
         )}
       </Box>
@@ -113,14 +113,14 @@ export default function OrderDetailPage() {
         <Grid item xs={12} md={8}>
           <Card>
             <CardContent>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>Items</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>Ürünler</Typography>
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 700 }}>Item</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }} align="center">Qty</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }} align="right">Price</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }} align="right">Subtotal</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Ürün</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }} align="center">Adet</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }} align="right">Fiyat</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }} align="right">Ara toplam</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -140,19 +140,19 @@ export default function OrderDetailPage() {
               <Divider sx={{ my: 2 }} />
 
               <Box sx={{ maxWidth: 320, ml: 'auto' }}>
-                <Row label="Items total" value={order.itemsTotal != null ? formatPrice(order.itemsTotal) : null} />
+                <Row label="Ürünler toplamı" value={order.itemsTotal != null ? formatPrice(order.itemsTotal) : null} />
                 {order.promoDiscount > 0 && (
-                  <Row label={`Promo${order.promoCode ? ` (${order.promoCode})` : ''}`}
+                  <Row label={`Promosyon${order.promoCode ? ` (${order.promoCode})` : ''}`}
                     value={`− ${formatPrice(order.promoDiscount)}`} color="error.main" />
                 )}
                 {order.discountAmount > 0 && (
-                  <Row label="Loyalty discount" value={`− ${formatPrice(order.discountAmount)}`} color="success.main" />
+                  <Row label="Sadakat indirimi" value={`− ${formatPrice(order.discountAmount)}`} color="success.main" />
                 )}
-                {order.deliveryFee > 0 && <Row label="Delivery fee" value={formatPrice(order.deliveryFee)} />}
-                {order.serviceFee > 0 && <Row label="Service fee" value={formatPrice(order.serviceFee)} />}
-                {order.tip > 0 && <Row label="Tip" value={formatPrice(order.tip)} />}
+                {order.deliveryFee > 0 && <Row label="Teslimat ücreti" value={formatPrice(order.deliveryFee)} />}
+                {order.serviceFee > 0 && <Row label="Hizmet bedeli" value={formatPrice(order.serviceFee)} />}
+                {order.tip > 0 && <Row label="Bahşiş" value={formatPrice(order.tip)} />}
                 <Divider sx={{ my: 1 }} />
-                <Row label="Total" value={formatPrice(order.totalPrice)} strong />
+                <Row label="Toplam" value={formatPrice(order.totalPrice)} strong />
               </Box>
             </CardContent>
           </Card>
@@ -164,18 +164,18 @@ export default function OrderDetailPage() {
             {/* Status control */}
             <Card>
               <CardContent>
-                <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5 }}>Status</Typography>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5 }}>Durum</Typography>
                 <FormControl fullWidth size="small" disabled={isCancelled}>
-                  <InputLabel id="status-label">Order status</InputLabel>
+                  <InputLabel id="status-label">Sipariş durumu</InputLabel>
                   <Select
                     labelId="status-label"
-                    label="Order status"
+                    label="Sipariş durumu"
                     value={order.status}
                     onChange={handleStatusChange}
                   >
                     {ORDER_STATUSES.map((s) => (
                       <MenuItem key={s} value={s}>
-                        {s.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                        {STATUS_LABELS[s] || s}
                       </MenuItem>
                     ))}
                   </Select>
@@ -183,7 +183,7 @@ export default function OrderDetailPage() {
                 {updateStatus.isPending && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5 }}>
                     <CircularProgress size={16} />
-                    <Typography variant="caption" color="text.secondary">Updating…</Typography>
+                    <Typography variant="caption" color="text.secondary">Güncelleniyor…</Typography>
                   </Box>
                 )}
               </CardContent>
@@ -193,23 +193,23 @@ export default function OrderDetailPage() {
             {/* Customer */}
             <Card>
               <CardContent>
-                <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>Customer</Typography>
-                <Row label="Name" value={order.customerName} />
-                <Row label="Phone" value={order.phone} />
-                <Row label="Address" value={address} />
-                <Row label="Notes" value={order.notes} />
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>Müşteri</Typography>
+                <Row label="Ad" value={order.customerName} />
+                <Row label="Telefon" value={order.phone} />
+                <Row label="Adres" value={address} />
+                <Row label="Notlar" value={order.notes} />
               </CardContent>
             </Card>
 
             {/* Payment & meta */}
             <Card>
               <CardContent>
-                <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>Payment</Typography>
-                <Row label="Method" value={order.paymentMethod === 'card' ? 'Card (on delivery)' : 'Cash (on delivery)'} />
-                <Row label="Payment status" value={order.paymentStatus} />
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>Ödeme</Typography>
+                <Row label="Yöntem" value={order.paymentMethod === 'card' ? 'Kart (kapıda)' : 'Nakit (kapıda)'} />
+                <Row label="Ödeme durumu" value={order.paymentStatus} />
                 <Divider sx={{ my: 1 }} />
-                <Row label="Created" value={dayjs(order.createdAt).format('MMM D, YYYY HH:mm')} />
-                <Row label="Updated" value={dayjs(order.updatedAt).format('MMM D, YYYY HH:mm')} />
+                <Row label="Oluşturuldu" value={dayjs(order.createdAt).format('D MMM YYYY HH:mm')} />
+                <Row label="Güncellendi" value={dayjs(order.updatedAt).format('D MMM YYYY HH:mm')} />
               </CardContent>
             </Card>
           </Stack>

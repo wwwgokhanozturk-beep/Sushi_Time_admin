@@ -73,7 +73,7 @@ export default function MenuPage() {
   };
 
   return (
-    <PageLayout title="Menu Management">
+    <PageLayout title="Menü Yönetimi">
       {/* Header */}
       <Box
         sx={{
@@ -87,7 +87,7 @@ export default function MenuPage() {
       >
         <TextField
           size="small"
-          placeholder="Search menu…"
+          placeholder="Menüde ara…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           InputProps={{
@@ -105,14 +105,14 @@ export default function MenuPage() {
             startIcon={<ReorderIcon />}
             onClick={() => setOrderOpen(true)}
           >
-            Reorder Categories
+            Kategori Sıralaması
           </Button>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => navigate("/menu/new")}
           >
-            Add Item
+            Ürün Ekle
           </Button>
         </Box>
       </Box>
@@ -130,7 +130,7 @@ export default function MenuPage() {
         </Box>
       ) : filtered.length === 0 ? (
         <Typography color="text.secondary" sx={{ textAlign: "center", mt: 6 }}>
-          No menu items found
+          Ürün bulunamadı
         </Typography>
       ) : (
         <Grid container spacing={2}>
@@ -146,7 +146,7 @@ export default function MenuPage() {
               >
                 {/* Availability badge */}
                 <Chip
-                  label={item.isAvailable ? "Available" : "Unavailable"}
+                  label={item.isAvailable ? "Mevcut" : "Tükendi"}
                   color={item.isAvailable ? "success" : "error"}
                   size="small"
                   sx={{
@@ -205,7 +205,7 @@ export default function MenuPage() {
                       overflow: "hidden",
                     }}
                   >
-                    {item.description || "No description"}
+                    {item.description || "Açıklama yok"}
                   </Typography>
                   <Box
                     sx={{
@@ -218,7 +218,7 @@ export default function MenuPage() {
                       {formatPrice(item.price)}
                     </Typography>
                     <Box>
-                      <Tooltip title="Edit">
+                      <Tooltip title="Düzenle">
                         <IconButton
                           size="small"
                           onClick={() => navigate(`/menu/${item._id}/edit`)}
@@ -226,7 +226,7 @@ export default function MenuPage() {
                           <EditIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Delete">
+                      <Tooltip title="Sil">
                         <IconButton
                           size="small"
                           color="error"
@@ -246,22 +246,21 @@ export default function MenuPage() {
 
       {/* Delete confirmation dialog */}
       <Dialog open={Boolean(deleteId)} onClose={() => setDeleteId(null)}>
-        <DialogTitle>Delete Menu Item</DialogTitle>
+        <DialogTitle>Ürünü Sil</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete this item? This action cannot be
-            undone.
+            Bu ürünü silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteId(null)}>Cancel</Button>
+          <Button onClick={() => setDeleteId(null)}>İptal</Button>
           <Button
             variant="contained"
             color="error"
             onClick={handleDelete}
             disabled={deleteMut.isPending}
           >
-            {deleteMut.isPending ? <CircularProgress size={20} /> : "Delete"}
+            {deleteMut.isPending ? <CircularProgress size={20} /> : "Sil"}
           </Button>
         </DialogActions>
       </Dialog>

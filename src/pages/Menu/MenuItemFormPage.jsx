@@ -55,10 +55,10 @@ export default function MenuItemFormPage() {
       const url = data?.data?.url || data?.url;
       if (url) {
         setForm((prev) => ({ ...prev, images: [...prev.images, url].slice(0, MAX_IMAGES) }));
-        toast.success('Image uploaded');
+        toast.success('Fotoğraf yüklendi');
       }
     } catch {
-      toast.error('Image upload failed');
+      toast.error('Fotoğraf yüklenemedi');
     } finally {
       setUploading(false);
       e.target.value = '';
@@ -67,6 +67,14 @@ export default function MenuItemFormPage() {
 
   const removeImage = (idx) =>
     setForm((prev) => ({ ...prev, images: prev.images.filter((_, i) => i !== idx) }));
+
+  // Добавить фото по URL (основной способ)
+  const addUrl = () =>
+    setForm((prev) => {
+      const u = (prev.imageUrl || '').trim();
+      if (!u || prev.images.length >= MAX_IMAGES) return prev;
+      return { ...prev, images: [...prev.images, u].slice(0, MAX_IMAGES), imageUrl: '' };
+    });
 
   useEffect(() => {
     if (existing) {
@@ -101,10 +109,10 @@ export default function MenuItemFormPage() {
 
   const validate = () => {
     const errs = {};
-    if (!form.name.trim())     errs.name     = 'Name is required';
-    if (!form.category)        errs.category  = 'Category is required';
+    if (!form.name.trim())     errs.name     = 'Ad gerekli';
+    if (!form.category)        errs.category  = 'Kategori gerekli';
     if (!form.price || isNaN(form.price) || Number(form.price) < 0)
-      errs.price = 'Valid price is required';
+      errs.price = 'Geçerli bir fiyat gerekli';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -146,13 +154,13 @@ export default function MenuItemFormPage() {
   const saving = createMut.isPending || updateMut.isPending;
 
   if (isEdit && loadingItem) {
-    return <PageLayout title="Loading…"><Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}><CircularProgress /></Box></PageLayout>;
+    return <PageLayout title="Yükleniyor…"><Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}><CircularProgress /></Box></PageLayout>;
   }
 
   return (
-    <PageLayout title={isEdit ? 'Edit Menu Item' : 'New Menu Item'}>
+    <PageLayout title={isEdit ? 'Ürünü Düzenle' : 'Yeni Ürün'}>
       <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/menu')} sx={{ mb: 2 }}>
-        Back to Menu
+        Menüye Dön
       </Button>
 
       <Card sx={{ maxWidth: 720, mx: 'auto' }}>
@@ -161,15 +169,15 @@ export default function MenuItemFormPage() {
             <Grid container spacing={2.5}>
               {/* Name */}
               <Grid item xs={12}>
-                <TextField fullWidth label="Item Name" value={form.name}
+                <TextField fullWidth label="Ürün Adı" value={form.name}
                   onChange={set('name')} error={!!errors.name} helperText={errors.name} />
               </Grid>
 
               {/* Category + Price */}
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth error={!!errors.category}>
-                  <InputLabel>Category</InputLabel>
-                  <Select value={form.category} label="Category" onChange={set('category')}>
+                  <InputLabel>Kategori</InputLabel>
+                  <Select value={form.category} label="Kategori" onChange={set('category')}>
                     {MENU_CATEGORIES.map((c) => (
                       <MenuItem key={c} value={c}>{c[0].toUpperCase() + c.slice(1)}</MenuItem>
                     ))}
@@ -177,16 +185,16 @@ export default function MenuItemFormPage() {
                 </FormControl>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Price (₺)" value={form.price}
+                <TextField fullWidth label="Fiyat (₺)" value={form.price}
                   onChange={set('price')} error={!!errors.price} helperText={errors.price}
                   InputProps={{ startAdornment: <InputAdornment position="start">₺</InputAdornment> }}
-                  type="number" inputProps={{ step: '0.01', min: '0', placeholder: 'Например: 149.90' }} />
+                  type="number" inputProps={{ step: '0.01', min: '0', placeholder: 'Örn: 149.90' }} />
               </Grid>
 
               {/* Description + Ingredients — tabbed per language */}
               <Grid item xs={12}>
                 <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                  Description &amp; Ingredients
+                  Açıklama ve Malzemeler
                 </Typography>
                 <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
                   <Tabs
@@ -202,18 +210,18 @@ export default function MenuItemFormPage() {
                   {/* EN */}
                   {langTab === 0 && (
                     <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <TextField fullWidth label="Description (EN)" value={form.description}
+                      <TextField fullWidth label="Açıklama (EN)" value={form.description}
                         onChange={set('description')} multiline minRows={2} maxRows={4} />
-                      <TextField fullWidth label="Ingredients (EN) — comma-separated" value={form.ingredients}
+                      <TextField fullWidth label="Malzemeler (EN) — virgülle ayrılmış" value={form.ingredients}
                         onChange={set('ingredients')} placeholder="rice, salmon, nori, wasabi" />
                     </Box>
                   )}
                   {/* RU */}
                   {langTab === 1 && (
                     <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <TextField fullWidth label="Описание (RU)" value={form.description_ru}
+                      <TextField fullWidth label="Açıklama (RU)" value={form.description_ru}
                         onChange={set('description_ru')} multiline minRows={2} maxRows={4} />
-                      <TextField fullWidth label="Ингредиенты (RU) — через запятую" value={form.ingredients_ru}
+                      <TextField fullWidth label="Malzemeler (RU) — virgülle ayrılmış" value={form.ingredients_ru}
                         onChange={set('ingredients_ru')} placeholder="рис, лосось, нори, васаби" />
                     </Box>
                   )}
@@ -229,93 +237,101 @@ export default function MenuItemFormPage() {
                 </Box>
               </Grid>
 
-              {/* Photos — up to 3 (карусель в меню листает их каждые 5с) */}
+              {/* Fotoğraflar — en fazla MAX_IMAGES (menüde 5 sn'de bir geçer) */}
               <Grid item xs={12}>
                 <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
-                  Фото блюда (до {MAX_IMAGES}) — в меню листаются каждые 5 сек
+                  Ürün fotoğrafları (en fazla {MAX_IMAGES}) — menüde 5 sn'de bir geçer
                 </Typography>
 
-                <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
-                  {form.images.map((url, idx) => (
-                    <Box
-                      key={idx}
-                      sx={{
-                        position: 'relative', width: 84, height: 84, borderRadius: 2,
-                        overflow: 'hidden', border: '1px solid #E5E7EB', flexShrink: 0,
-                      }}
-                    >
-                      <img src={url} alt={`photo ${idx + 1}`}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      {idx === 0 && (
-                        <Box sx={{
-                          position: 'absolute', bottom: 0, left: 0, right: 0,
-                          bgcolor: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 10,
-                          fontWeight: 700, textAlign: 'center', py: 0.25,
-                        }}>
-                          Главное
-                        </Box>
-                      )}
-                      <IconButton
-                        size="small"
-                        onClick={() => removeImage(idx)}
-                        sx={{
-                          position: 'absolute', top: 2, right: 2, width: 22, height: 22,
-                          bgcolor: 'rgba(0,0,0,0.55)', color: '#fff',
-                          '&:hover': { bgcolor: 'error.main' },
-                        }}
-                      >
-                        <span style={{ fontSize: 14, lineHeight: 1 }}>×</span>
-                      </IconButton>
-                    </Box>
-                  ))}
-
-                  {form.images.length < MAX_IMAGES && (
-                    <Button
-                      variant="outlined"
-                      component="label"
-                      disabled={uploading}
-                      sx={{
-                        width: 84, height: 84, minWidth: 84, flexShrink: 0, flexDirection: 'column',
-                        gap: 0.5, borderStyle: 'dashed', borderRadius: 2,
-                      }}
-                    >
-                      {uploading ? <CircularProgress size={18} /> : <UploadIcon fontSize="small" />}
-                      <span style={{ fontSize: 11 }}>{uploading ? '...' : 'Добавить'}</span>
-                      <input
-                        type="file"
-                        hidden
-                        accept="image/jpeg,image/png,image/webp,image/gif"
-                        onChange={handleFileUpload}
-                        ref={fileRef}
-                      />
-                    </Button>
-                  )}
-                </Box>
-
-                {/* Manual URL add */}
-                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 1.5 }}>
+                {/* URL ile ekleme — birincil yöntem */}
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                   <TextField
-                    fullWidth size="small" label="…или вставить URL фото"
+                    fullWidth
+                    size="small"
+                    label="Fotoğraf URL'si"
                     value={form.imageUrl}
                     onChange={set('imageUrl')}
-                    placeholder="https://example.com/image.jpg"
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addUrl(); } }}
+                    placeholder="https://ornek.com/fotograf.jpg"
                     disabled={form.images.length >= MAX_IMAGES}
+                    InputProps={{
+                      endAdornment: form.imageUrl ? (
+                        <InputAdornment position="end">
+                          <IconButton size="small" onClick={() => setForm((p) => ({ ...p, imageUrl: '' }))}>
+                            <span style={{ fontSize: 16, lineHeight: 1 }}>×</span>
+                          </IconButton>
+                        </InputAdornment>
+                      ) : null,
+                    }}
                   />
                   <Button
-                    variant="outlined"
+                    variant="contained"
+                    onClick={addUrl}
                     disabled={!form.imageUrl.trim() || form.images.length >= MAX_IMAGES}
-                    onClick={() => setForm((prev) => ({
-                      ...prev,
-                      images: [...prev.images, prev.imageUrl.trim()].slice(0, MAX_IMAGES),
-                      imageUrl: '',
-                    }))}
-                    sx={{ flexShrink: 0 }}
+                    sx={{ flexShrink: 0, minWidth: 96 }}
                   >
-                    Добавить URL
+                    Ekle
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    disabled={uploading || form.images.length >= MAX_IMAGES}
+                    title="Dosyadan yükle"
+                    sx={{ flexShrink: 0, minWidth: 48, px: 1 }}
+                  >
+                    {uploading ? <CircularProgress size={18} /> : <UploadIcon fontSize="small" />}
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      onChange={handleFileUpload}
+                      ref={fileRef}
+                    />
                   </Button>
                 </Box>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                  URL'yi yapıştırıp Enter'a basın ya da "Ekle"ye tıklayın. İsterseniz dosyadan da yükleyebilirsiniz.
+                </Typography>
 
-                {/* Фото-редактор: рамка + зум + перетаскивание (применяется ко всем фото) */}
+                {/* Eklenen fotoğraflar */}
+                {form.images.length > 0 && (
+                  <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'center', mt: 1.5 }}>
+                    {form.images.map((url, idx) => (
+                      <Box
+                        key={idx}
+                        sx={{
+                          position: 'relative', width: 84, height: 84, borderRadius: 2,
+                          overflow: 'hidden', border: '1px solid #E5E7EB', flexShrink: 0,
+                        }}
+                      >
+                        <img src={url} alt={`foto ${idx + 1}`}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        {idx === 0 && (
+                          <Box sx={{
+                            position: 'absolute', bottom: 0, left: 0, right: 0,
+                            bgcolor: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 10,
+                            fontWeight: 700, textAlign: 'center', py: 0.25,
+                          }}>
+                            Ana
+                          </Box>
+                        )}
+                        <IconButton
+                          size="small"
+                          onClick={() => removeImage(idx)}
+                          sx={{
+                            position: 'absolute', top: 2, right: 2, width: 22, height: 22,
+                            bgcolor: 'rgba(0,0,0,0.55)', color: '#fff',
+                            '&:hover': { bgcolor: 'error.main' },
+                          }}
+                        >
+                          <span style={{ fontSize: 14, lineHeight: 1 }}>×</span>
+                        </IconButton>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+
+                {/* Foto editörü: çerçeve + yakınlaştırma + sürükleme (tüm fotoğraflara uygulanır) */}
                 {form.images[0] ? (
                   <Box sx={{ mt: 2 }}>
                     <ImageFrameEditor
@@ -333,17 +349,17 @@ export default function MenuItemFormPage() {
 
               {/* Prep time + Calories */}
               <Grid item xs={6} sm={4}>
-                <TextField fullWidth label="Prep Time (min)" value={form.preparationTime}
+                <TextField fullWidth label="Hazırlık Süresi (dk)" value={form.preparationTime}
                   onChange={set('preparationTime')} type="number" inputProps={{ min: '0' }} />
               </Grid>
               <Grid item xs={6} sm={4}>
-                <TextField fullWidth label="Calories" value={form.calories}
+                <TextField fullWidth label="Kalori" value={form.calories}
                   onChange={set('calories')} type="number" inputProps={{ min: '0' }} />
               </Grid>
               <Grid item xs={12} sm={4} sx={{ display: 'flex', alignItems: 'center' }}>
                 <FormControlLabel
                   control={<Switch checked={form.isAvailable} onChange={set('isAvailable')} color="success" />}
-                  label="Available"
+                  label="Mevcut"
                 />
               </Grid>
 
@@ -351,17 +367,17 @@ export default function MenuItemFormPage() {
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Stock"
+                  label="Stok"
                   value={form.stock}
                   onChange={set('stock')}
                   type="number"
                   inputProps={{ min: '0' }}
                   helperText={
                     form.stock === ''
-                      ? 'Leave empty for unlimited stock'
+                      ? 'Sınırsız stok için boş bırakın'
                       : Number(form.stock) === 0
-                        ? '⚠️ Out of stock — item will be hidden'
-                        : `${form.stock} unit(s) tracked`
+                        ? '⚠️ Stok yok — ürün gizlenecek'
+                        : `${form.stock} adet takip ediliyor`
                   }
                   FormHelperTextProps={{ sx: { color: Number(form.stock) === 0 && form.stock !== '' ? 'warning.main' : 'text.secondary' } }}
                 />
@@ -370,7 +386,7 @@ export default function MenuItemFormPage() {
               {/* Preview */}
               {form.imageUrl && (
                 <Grid item xs={12}>
-                  <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>Image Preview</Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>Önizleme</Typography>
                   <Box component="img" src={form.imageUrl} alt="preview"
                     sx={{ maxHeight: 160, borderRadius: 2, objectFit: 'cover' }}
                     onError={(e) => { e.target.style.display = 'none'; }} />
@@ -384,7 +400,7 @@ export default function MenuItemFormPage() {
                   disabled={saving}
                   sx={{ py: 1.5, fontWeight: 700 }}
                 >
-                  {isEdit ? 'Update Item' : 'Create Item'}
+                  {isEdit ? 'Ürünü Güncelle' : 'Ürün Oluştur'}
                 </Button>
               </Grid>
             </Grid>

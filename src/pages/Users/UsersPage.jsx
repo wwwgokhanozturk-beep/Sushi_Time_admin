@@ -84,7 +84,7 @@ export default function UsersPage() {
   };
 
   return (
-    <PageLayout title="Users">
+    <PageLayout title="Kullanıcılar">
       {/* ── Filters bar ── */}
       <Card elevation={0} sx={{ border: '1px solid #E5E7EB', borderRadius: 3, mb: 3 }}>
         <CardContent>
@@ -95,7 +95,7 @@ export default function UsersPage() {
             justifyContent="space-between"
           >
             <TextField
-              placeholder="Search by name, email or phone… (press Enter)"
+              placeholder="İsim, e-posta veya telefon ile ara… (Enter'a basın)"
               size="small"
               value={searchInput}
               onChange={handleSearchChange}
@@ -119,11 +119,11 @@ export default function UsersPage() {
             >
               <ToggleButton value="all">
                 <PeopleIcon fontSize="small" sx={{ mr: 0.5 }} />
-                All Users
+                Tüm Kullanıcılar
               </ToggleButton>
               <ToggleButton value="loyal">
                 <StarsIcon fontSize="small" sx={{ mr: 0.5 }} />
-                Loyal Clients
+                Sadık Müşteriler
               </ToggleButton>
             </ToggleButtonGroup>
           </Stack>
@@ -132,7 +132,7 @@ export default function UsersPage() {
             <Box sx={{ mt: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
               <LocalOfferIcon fontSize="small" color="success" />
               <Typography variant="caption" color="success.main" fontWeight={600}>
-                Showing customers with more than 3 completed orders
+                3'ten fazla tamamlanmış siparişi olan müşteriler gösteriliyor
               </Typography>
             </Box>
           )}
@@ -143,8 +143,8 @@ export default function UsersPage() {
       {data && (
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            Total: <strong>{pagination?.total ?? 0}</strong> users
-            {loyalFilter === 'loyal' && ' with loyalty status'}
+            Toplam: <strong>{pagination?.total ?? 0}</strong> kullanıcı
+            {loyalFilter === 'loyal' && ' (sadakat durumlu)'}
           </Typography>
         </Box>
       )}
@@ -152,7 +152,7 @@ export default function UsersPage() {
       {/* ── Error ── */}
       {isError && (
         <Alert severity="error" sx={{ mb: 3 }}>
-          {error?.response?.data?.message || 'Failed to load users'}
+          {error?.response?.data?.message || 'Kullanıcılar yüklenemedi'}
         </Alert>
       )}
 
@@ -162,12 +162,12 @@ export default function UsersPage() {
           <Table>
             <TableHead>
               <TableRow sx={{ bgcolor: '#F9FAFB' }}>
-                <TableCell sx={{ fontWeight: 700 }}>User</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Phone</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Role</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Orders</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Loyalty</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Registered</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Kullanıcı</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Telefon</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Rol</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Siparişler</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Sadakat</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Kayıt</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -185,8 +185,8 @@ export default function UsersPage() {
                     <PeopleIcon sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
                     <Typography color="text.secondary">
                       {loyalFilter === 'loyal'
-                        ? 'No loyal users yet (need 4+ orders)'
-                        : 'No users found'}
+                        ? 'Henüz sadık kullanıcı yok (4+ sipariş gerekli)'
+                        : 'Kullanıcı bulunamadı'}
                     </Typography>
                   </TableCell>
                 </TableRow>
@@ -231,14 +231,14 @@ export default function UsersPage() {
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         <StarsIcon fontSize="small" color="warning" />
                         <Typography variant="caption" fontWeight={700} color="warning.main">
-                          Loyal
+                          Sadık
                         </Typography>
                       </Box>
                     ) : (
                       <Typography variant="caption" color="text.disabled">
                         {user.ordersCount > 0
-                          ? `${4 - user.ordersCount} more to loyalty`
-                          : user.role === 'customer' ? 'No orders yet' : '—'}
+                          ? `Sadakate ${4 - user.ordersCount} sipariş kaldı`
+                          : user.role === 'customer' ? 'Henüz sipariş yok' : '—'}
                       </Typography>
                     )}
                   </TableCell>

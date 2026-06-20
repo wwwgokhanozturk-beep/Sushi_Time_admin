@@ -21,8 +21,8 @@ export function useCreatePromotion() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data) => promotionService.create(data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['promotions'] }); toast.success('Promotion created'); },
-    onError:   (err) => toast.error(err.response?.data?.message || 'Create failed'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['promotions'] }); toast.success('Kampanya oluşturuldu'); },
+    onError:   (err) => toast.error(err.response?.data?.message || 'Oluşturma başarısız'),
   });
 }
 
@@ -30,8 +30,8 @@ export function useUpdatePromotion() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }) => promotionService.update(id, data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['promotions'] }); toast.success('Promotion updated'); },
-    onError:   (err) => toast.error(err.response?.data?.message || 'Update failed'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['promotions'] }); toast.success('Kampanya güncellendi'); },
+    onError:   (err) => toast.error(err.response?.data?.message || 'Güncelleme başarısız'),
   });
 }
 
@@ -39,7 +39,7 @@ export function useDeletePromotion() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id) => promotionService.remove(id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['promotions'] }); toast.success('Promotion deleted'); },
-    onError:   (err) => toast.error(err.response?.data?.message || 'Delete failed'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['promotions'] }); toast.success('Kampanya silindi'); },
+    onError:   (err) => toast.error(err.response?.data?.message || 'Silme başarısız'),
   });
 }

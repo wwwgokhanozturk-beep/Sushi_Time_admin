@@ -149,12 +149,12 @@ export default function ChatPage() {
         });
         setSelectedThread(thread);
       } else if (message.sender === 'customer') {
-        notifyRef.current.info(`New message from ${getCustomerName(thread)}`);
+        notifyRef.current.info(`${getCustomerName(thread)} yeni mesaj gönderdi`);
       }
     });
 
     socket.on('connect_error', (err) => {
-      notifyRef.current.error(err.message || 'Chat socket connection failed');
+      notifyRef.current.error(err.message || 'Sohbet bağlantısı başarısız');
     });
 
     return () => {
@@ -222,7 +222,7 @@ export default function ChatPage() {
             queryClient.invalidateQueries({ queryKey: ['chatThreads'] });
             queryClient.invalidateQueries({ queryKey: ['chatMessages', selectedThread._id] });
             setMessageText(text);
-            notify.error(ack?.message || 'Message failed');
+            notify.error(ack?.message || 'Mesaj gönderilemedi');
             return;
           }
 
@@ -277,14 +277,14 @@ export default function ChatPage() {
       queryClient.invalidateQueries({ queryKey: ['chatThreads'] });
       queryClient.invalidateQueries({ queryKey: ['chatMessages', selectedThread._id] });
       setMessageText(text);
-      notify.error(err.response?.data?.message || 'Message failed');
+      notify.error(err.response?.data?.message || 'Mesaj gönderilemedi');
     } finally {
       setSending(false);
     }
   };
 
   return (
-    <PageLayout title="Chat">
+    <PageLayout title="Sohbet">
       <Paper
         sx={{
           height: 'calc(100vh - 112px)',
@@ -297,10 +297,10 @@ export default function ChatPage() {
         <Box sx={{ borderRight: { md: '1px solid #E5E7EB' }, overflow: 'auto' }}>
           <Box sx={{ p: 2 }}>
             <Typography variant="h6" fontWeight={800}>
-              Customer chats
+              Müşteri sohbetleri
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Live messages from mobile clients
+              Mobil müşterilerden canlı mesajlar
             </Typography>
           </Box>
           <Divider />
@@ -338,7 +338,7 @@ export default function ChatPage() {
               {!threads.length && (
                 <Box sx={{ px: 3, py: 5, textAlign: 'center' }}>
                   <ChatIcon color="disabled" sx={{ fontSize: 42, mb: 1 }} />
-                  <Typography color="text.secondary">No customer messages yet</Typography>
+                  <Typography color="text.secondary">Henüz müşteri mesajı yok</Typography>
                 </Box>
               )}
             </List>
@@ -353,7 +353,7 @@ export default function ChatPage() {
                   {selectedCustomer}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {selectedThread.customer?.phone || selectedThread.customer?.email || 'Mobile client'}
+                  {selectedThread.customer?.phone || selectedThread.customer?.email || 'Mobil müşteri'}
                 </Typography>
               </Box>
 
@@ -408,7 +408,7 @@ export default function ChatPage() {
                 <TextField
                   value={messageText}
                   onChange={(event) => setMessageText(event.target.value)}
-                  placeholder="Type a reply"
+                  placeholder="Yanıt yazın"
                   fullWidth
                   multiline
                   maxRows={4}
@@ -421,7 +421,7 @@ export default function ChatPage() {
                   disabled={sending || !messageText.trim()}
                   sx={{ alignSelf: 'flex-end', minHeight: 56 }}
                 >
-                  Send
+                  Gönder
                 </Button>
               </Box>
             </>
@@ -439,10 +439,10 @@ export default function ChatPage() {
               <Box>
                 <ChatIcon color="disabled" sx={{ fontSize: 56, mb: 1 }} />
                 <Typography variant="h6" fontWeight={800}>
-                  Select a chat
+                  Bir sohbet seçin
                 </Typography>
                 <Typography color="text.secondary">
-                  Customer messages will appear here in real time.
+                  Müşteri mesajları burada anlık olarak görünecek.
                 </Typography>
               </Box>
             </Box>

@@ -12,13 +12,13 @@ import PageLayout from '@/components/layout/PageLayout';
 import { settingsService } from '@/services/settingsService';
 
 export default function SettingsPage() {
-  // ── Contact ──────────────────────────────────────────────────────────────
+  // ── İletişim ─────────────────────────────────────────────────────────────
   const [contactType, setContactType] = useState('whatsapp');
   const [contactNumber, setContactNumber] = useState('');
   const [savingContact, setSavingContact] = useState(false);
   const [contactMsg, setContactMsg] = useState(null);
 
-  // ── Slideshow ────────────────────────────────────────────────────────────
+  // ── Slayt gösterisi ──────────────────────────────────────────────────────
   const [autoplay, setAutoplay] = useState(true);
   const [intervalSec, setIntervalSec] = useState(5);
   const [savingSlide, setSavingSlide] = useState(false);
@@ -48,9 +48,9 @@ export default function SettingsPage() {
     setContactMsg(null);
     try {
       await settingsService.updateContact({ contactType, contactNumber });
-      setContactMsg({ type: 'success', msg: 'Сохранено' });
+      setContactMsg({ type: 'success', msg: 'Kaydedildi' });
     } catch (e) {
-      setContactMsg({ type: 'error', msg: e.response?.data?.message || 'Ошибка сохранения' });
+      setContactMsg({ type: 'error', msg: e.response?.data?.message || 'Kaydetme hatası' });
     } finally {
       setSavingContact(false);
     }
@@ -63,9 +63,9 @@ export default function SettingsPage() {
       const sec = Math.min(120, Math.max(1, Math.round(Number(intervalSec) || 5)));
       await settingsService.updateSlideshow({ autoplay, intervalSec: sec });
       setIntervalSec(sec);
-      setSlideMsg({ type: 'success', msg: 'Сохранено' });
+      setSlideMsg({ type: 'success', msg: 'Kaydedildi' });
     } catch (e) {
-      setSlideMsg({ type: 'error', msg: e.response?.data?.message || 'Ошибка сохранения' });
+      setSlideMsg({ type: 'error', msg: e.response?.data?.message || 'Kaydetme hatası' });
     } finally {
       setSavingSlide(false);
     }
@@ -73,33 +73,33 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <PageLayout title="Settings">
+      <PageLayout title="Ayarlar">
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}><CircularProgress /></Box>
       </PageLayout>
     );
   }
 
   return (
-    <PageLayout title="Settings">
+    <PageLayout title="Ayarlar">
       <Box sx={{ maxWidth: 560, display: 'flex', flexDirection: 'column', gap: 3 }}>
 
-        {/* Contact */}
+        {/* İletişim */}
         <Card>
           <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
             <Box>
-              <Typography variant="h6" fontWeight={700}>Контактный номер</Typography>
+              <Typography variant="h6" fontWeight={700}>İletişim numarası</Typography>
               <Typography variant="body2" color="text.secondary">
-                Отображается на сайте и в приложении — на главной и в чате.
+                Web sitesinde ve uygulamada gösterilir — ana sayfada ve sohbette.
               </Typography>
             </Box>
 
             {contactMsg && <Alert severity={contactMsg.type}>{contactMsg.msg}</Alert>}
 
             <FormControl fullWidth>
-              <InputLabel id="contact-type-label">Тип контакта</InputLabel>
+              <InputLabel id="contact-type-label">İletişim türü</InputLabel>
               <Select
                 labelId="contact-type-label"
-                label="Тип контакта"
+                label="İletişim türü"
                 value={contactType}
                 onChange={(e) => setContactType(e.target.value)}
               >
@@ -110,19 +110,19 @@ export default function SettingsPage() {
                 </MenuItem>
                 <MenuItem value="phone">
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <PhoneIcon fontSize="small" /> Телефон
+                    <PhoneIcon fontSize="small" /> Telefon
                   </Box>
                 </MenuItem>
               </Select>
             </FormControl>
 
             <TextField
-              label="Номер"
+              label="Numara"
               placeholder="+90 555 000 0000"
               fullWidth
               value={contactNumber}
               onChange={(e) => setContactNumber(e.target.value)}
-              helperText="Укажите номер в международном формате, например +90 555 000 0000"
+              helperText="Numarayı uluslararası formatta girin, örn. +90 555 000 0000"
             />
 
             <Box>
@@ -132,22 +132,22 @@ export default function SettingsPage() {
                 onClick={saveContact}
                 disabled={savingContact}
               >
-                Сохранить
+                Kaydet
               </Button>
             </Box>
           </CardContent>
         </Card>
 
-        {/* Slideshow */}
+        {/* Slayt gösterisi */}
         <Card>
           <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
             <Box>
               <Typography variant="h6" fontWeight={700} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <SlideshowIcon fontSize="small" /> Слайдшоу фото в меню
+                <SlideshowIcon fontSize="small" /> Menüde fotoğraf slaytı
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Если у блюда несколько фото. Авто — фото листаются сами; выключите —
-                клиент будет листать вручную (свайпом).
+                Bir üründe birden fazla fotoğraf varsa. Otomatik — fotoğraflar kendiliğinden
+                geçer; kapatırsanız müşteri elle (kaydırarak) geçer.
               </Typography>
             </Box>
 
@@ -155,18 +155,18 @@ export default function SettingsPage() {
 
             <FormControlLabel
               control={<Switch checked={autoplay} onChange={(e) => setAutoplay(e.target.checked)} />}
-              label={autoplay ? 'Авто-перелистывание включено' : 'Авто выключено (ручной свайп)'}
+              label={autoplay ? 'Otomatik geçiş açık' : 'Otomatik kapalı (elle kaydırma)'}
             />
 
             <TextField
-              label="Интервал смены"
+              label="Geçiş aralığı"
               type="number"
               value={intervalSec}
               onChange={(e) => setIntervalSec(e.target.value)}
               disabled={!autoplay}
               inputProps={{ min: 1, max: 120 }}
-              InputProps={{ endAdornment: <InputAdornment position="end">сек</InputAdornment> }}
-              helperText="От 1 до 120 секунд"
+              InputProps={{ endAdornment: <InputAdornment position="end">sn</InputAdornment> }}
+              helperText="1 ila 120 saniye"
               sx={{ maxWidth: 220 }}
             />
 
@@ -177,7 +177,7 @@ export default function SettingsPage() {
                 onClick={saveSlideshow}
                 disabled={savingSlide}
               >
-                Сохранить
+                Kaydet
               </Button>
             </Box>
           </CardContent>

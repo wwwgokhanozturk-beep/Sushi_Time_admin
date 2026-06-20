@@ -72,16 +72,16 @@ export default function AnalyticsPage() {
   };
 
   return (
-    <PageLayout title="Analytics">
+    <PageLayout title="Analitik">
       {/* ── Date Range Picker ── */}
       <Card elevation={0} sx={{ border: '1px solid #E5E7EB', borderRadius: 3, mb: 3 }}>
         <CardContent>
           <Typography variant="subtitle1" fontWeight={700} gutterBottom>
-            Date Range
+            Tarih Aralığı
           </Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
             <TextField
-              label="From"
+              label="Başlangıç"
               type="date"
               size="small"
               value={range.from}
@@ -91,7 +91,7 @@ export default function AnalyticsPage() {
               sx={{ minWidth: 180 }}
             />
             <TextField
-              label="To"
+              label="Bitiş"
               type="date"
               size="small"
               value={range.to}
@@ -108,7 +108,7 @@ export default function AnalyticsPage() {
       {/* ── Error ── */}
       {isError && (
         <Alert severity="error" sx={{ mb: 3 }}>
-          {error?.response?.data?.message || 'Failed to load analytics'}
+          {error?.response?.data?.message || 'Analitik yüklenemedi'}
         </Alert>
       )}
 
@@ -117,28 +117,28 @@ export default function AnalyticsPage() {
         <Grid item xs={12} sm={6} md={4}>
           <MetricCard
             icon={<TrendingUpIcon />}
-            label="Total Revenue"
+            label="Toplam Gelir"
             value={data ? formatPrice(data.totalRevenue) : '—'}
             color="success.main"
-            sub="Non-cancelled orders"
+            sub="İptal edilmeyen siparişler"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
           <MetricCard
             icon={<ShoppingCartIcon />}
-            label="Orders Count"
+            label="Sipariş Sayısı"
             value={data ? data.orderCount.toLocaleString() : '—'}
             color="primary.main"
-            sub="Non-cancelled orders"
+            sub="İptal edilmeyen siparişler"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={4}>
           <MetricCard
             icon={<ReceiptLongIcon />}
-            label="Average Check"
+            label="Ortalama Sepet"
             value={data ? formatPrice(data.avgCheck) : '—'}
             color="warning.main"
-            sub="Revenue ÷ Orders"
+            sub="Gelir ÷ Sipariş"
           />
         </Grid>
       </Grid>
@@ -149,7 +149,7 @@ export default function AnalyticsPage() {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
             <EmojiEventsIcon color="warning" />
             <Typography variant="subtitle1" fontWeight={700}>
-              Top 5 Menu Items
+              En Çok Satan 5 Ürün
             </Typography>
           </Box>
           <Divider sx={{ mb: 2 }} />
@@ -162,7 +162,7 @@ export default function AnalyticsPage() {
 
           {!isLoading && data?.topItems?.length === 0 && (
             <Typography color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-              No data for the selected period
+              Seçilen dönem için veri yok
             </Typography>
           )}
 

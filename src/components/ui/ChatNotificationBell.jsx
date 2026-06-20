@@ -110,9 +110,9 @@ export default function ChatNotificationBell() {
           px: 2, py: 1.5,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
-          <Typography variant="subtitle1" fontWeight={700}>Chat messages</Typography>
+          <Typography variant="subtitle1" fontWeight={700}>Sohbet mesajları</Typography>
           {unreadCount > 0 && (
-            <Button size="small" onClick={handleMarkAllRead}>Mark all read</Button>
+            <Button size="small" onClick={handleMarkAllRead}>Tümünü okundu işaretle</Button>
           )}
         </Box>
         <Divider />
@@ -121,7 +121,7 @@ export default function ChatNotificationBell() {
           <Box sx={{ p: 4, textAlign: 'center' }}>
             <ChatBubbleOutlineIcon color="disabled" sx={{ fontSize: 36, mb: 1 }} />
             <Typography variant="body2" color="text.secondary">
-              No new chat messages
+              Yeni mesaj yok
             </Typography>
           </Box>
         ) : (
@@ -181,7 +181,7 @@ export default function ChatNotificationBell() {
         <Divider />
         <Box sx={{ p: 1, textAlign: 'center' }}>
           <Button size="small" onClick={() => { navigate('/chat'); handleClose(); }}>
-            Open all chats
+            Tüm sohbetler
           </Button>
         </Box>
       </Popover>

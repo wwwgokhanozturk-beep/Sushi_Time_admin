@@ -67,10 +67,10 @@ export default function CategoryOrderDialog({ open, onClose }) {
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 800 }}>Reorder Categories</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 800 }}>Kategori Sıralaması</DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Drag rows to set the order shown to customers and across the panel.
+          Müşterilere ve panelde gösterilecek sırayı belirlemek için satırları sürükleyin.
         </Typography>
 
         {isLoading ? (
@@ -133,14 +133,14 @@ export default function CategoryOrderDialog({ open, onClose }) {
         )}
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>İptal</Button>
         <Button
           variant="contained"
           onClick={handleSave}
           disabled={updateMut.isPending || isLoading}
           startIcon={updateMut.isPending ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
         >
-          Save Order
+          Sırayı Kaydet
         </Button>
       </DialogActions>
     </Dialog>

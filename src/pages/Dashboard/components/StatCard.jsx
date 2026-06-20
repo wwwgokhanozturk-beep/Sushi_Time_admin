@@ -32,7 +32,7 @@ export default function StatCard({ title, value, subtitle, icon, color = 'primar
                   <TrendingDownIcon fontSize="small" color="error" />
                 )}
                 <Typography variant="caption" color={trend >= 0 ? 'success.main' : 'error.main'} fontWeight={600}>
-                  {Math.abs(trend)}% vs last week
+                  %{Math.abs(trend)} geçen haftaya göre
                 </Typography>
               </Box>
             )}

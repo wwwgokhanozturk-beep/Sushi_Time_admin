@@ -26,13 +26,13 @@ export default function NotificationsPage() {
     mutationFn: () => notificationService.broadcast(title, body),
     onSuccess: (res) => {
       const count = res.data?.data?.notification?.recipientCount ?? 0;
-      notify.success(`Рассылка отправлена ${count} пользователям`);
+      notify.success(`Bildirim ${count} kullanıcıya gönderildi`);
       setTitle('');
       setBody('');
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },
     onError: (err) => {
-      notify.error(err.response?.data?.message || 'Ошибка отправки');
+      notify.error(err.response?.data?.message || 'Gönderim hatası');
     },
   });
 
@@ -43,19 +43,19 @@ export default function NotificationsPage() {
   };
 
   return (
-    <PageLayout title="Рассылка уведомлений">
+    <PageLayout title="Bildirim Gönderimi">
       <Box sx={{ maxWidth: 900, mx: 'auto' }}>
         {/* Broadcast form */}
         <Paper sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" fontWeight={700} gutterBottom>
-            Отправить новость всем пользователям
+            Tüm kullanıcılara duyuru gönder
           </Typography>
           <Alert severity="info" sx={{ mb: 2 }}>
-            Push-уведомление получат все пользователи мобильного приложения, у которых включены уведомления.
+            Push bildirimi, bildirimleri açık olan tüm mobil uygulama kullanıcılarına gönderilir.
           </Alert>
           <Box component="form" onSubmit={handleSend} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
-              label="Заголовок"
+              label="Başlık"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
@@ -63,7 +63,7 @@ export default function NotificationsPage() {
               inputProps={{ maxLength: 100 }}
             />
             <TextField
-              label="Текст сообщения"
+              label="Mesaj metni"
               value={body}
               onChange={(e) => setBody(e.target.value)}
               required
@@ -79,7 +79,7 @@ export default function NotificationsPage() {
               disabled={broadcastMutation.isPending || !title.trim() || !body.trim()}
               sx={{ alignSelf: 'flex-end' }}
             >
-              {broadcastMutation.isPending ? 'Отправка…' : 'Отправить'}
+              {broadcastMutation.isPending ? 'Gönderiliyor…' : 'Gönder'}
             </Button>
           </Box>
         </Paper>
@@ -87,7 +87,7 @@ export default function NotificationsPage() {
         {/* History table */}
         <Paper sx={{ p: 3 }}>
           <Typography variant="h6" fontWeight={700} gutterBottom>
-            История рассылок
+            Gönderim geçmişi
           </Typography>
           <Divider sx={{ mb: 2 }} />
 
@@ -98,25 +98,25 @@ export default function NotificationsPage() {
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Дата</TableCell>
-                    <TableCell>Заголовок</TableCell>
-                    <TableCell>Текст</TableCell>
-                    <TableCell>Тип</TableCell>
-                    <TableCell align="right">Получатели</TableCell>
+                    <TableCell>Tarih</TableCell>
+                    <TableCell>Başlık</TableCell>
+                    <TableCell>Metin</TableCell>
+                    <TableCell>Tür</TableCell>
+                    <TableCell align="right">Alıcılar</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {data?.notifications?.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} align="center">
-                        <Typography variant="body2" color="text.secondary">Нет отправленных рассылок</Typography>
+                        <Typography variant="body2" color="text.secondary">Gönderilmiş bildirim yok</Typography>
                       </TableCell>
                     </TableRow>
                   )}
                   {data?.notifications?.map((n) => (
                     <TableRow key={n._id}>
                       <TableCell sx={{ whiteSpace: 'nowrap' }}>
-                        {new Date(n.createdAt).toLocaleString('ru-RU')}
+                        {new Date(n.createdAt).toLocaleString('tr-TR')}
                       </TableCell>
                       <TableCell>{n.title}</TableCell>
                       <TableCell sx={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

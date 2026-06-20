@@ -24,15 +24,15 @@ import { SIDEBAR_WIDTH } from "@/utils/constants";
 import { useChatNotificationStore } from "@/store/chatNotificationStore";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", icon: <DashboardIcon />, path: "/" },
-  { label: "Orders", icon: <ReceiptIcon />, path: "/orders" },
-  { label: "Menu", icon: <RestaurantMenuIcon />, path: "/menu" },
-  { label: "Promotions", icon: <LocalOfferIcon />, path: "/promotions" },
-  { label: "Users", icon: <PeopleIcon />, path: "/users" },
-  { label: "Analytics", icon: <BarChartIcon />, path: "/analytics" },
-  { label: "Notifications", icon: <CampaignIcon />, path: "/notifications" },
-  { label: "Chat", icon: <ChatIcon />, path: "/chat" },
-  { label: "Settings", icon: <SettingsIcon />, path: "/settings" },
+  { label: "Panel", icon: <DashboardIcon />, path: "/" },
+  { label: "Siparişler", icon: <ReceiptIcon />, path: "/orders" },
+  { label: "Menü", icon: <RestaurantMenuIcon />, path: "/menu" },
+  { label: "Kampanyalar", icon: <LocalOfferIcon />, path: "/promotions" },
+  { label: "Kullanıcılar", icon: <PeopleIcon />, path: "/users" },
+  { label: "Analitik", icon: <BarChartIcon />, path: "/analytics" },
+  { label: "Bildirimler", icon: <CampaignIcon />, path: "/notifications" },
+  { label: "Sohbet", icon: <ChatIcon />, path: "/chat" },
+  { label: "Ayarlar", icon: <SettingsIcon />, path: "/settings" },
 ];
 
 export default function Sidebar({ mobileOpen, onClose }) {
@@ -58,7 +58,7 @@ export default function Sidebar({ mobileOpen, onClose }) {
           letterSpacing: 1,
         }}
       >
-        ADMIN PANEL
+        YÖNETİM PANELİ
       </Typography>
       <Divider />
 

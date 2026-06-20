@@ -19,7 +19,7 @@ export default function RevenueChart({ data = SAMPLE_DATA }) {
     <Card sx={{ height: '100%' }}>
       <CardContent>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-          <Typography variant="h6" fontWeight={700}>Weekly Revenue</Typography>
+          <Typography variant="h6" fontWeight={700}>Haftalık Gelir</Typography>
           <Typography variant="h6" fontWeight={800} color="primary">
             ₺{data.reduce((s, d) => s + d.revenue, 0).toLocaleString('tr-TR')}
           </Typography>
@@ -36,7 +36,7 @@ export default function RevenueChart({ data = SAMPLE_DATA }) {
             <XAxis dataKey="day" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false}
               tickFormatter={(v) => `₺${v}`} />
-            <Tooltip formatter={(v) => [`₺${v}`, 'Revenue']} />
+            <Tooltip formatter={(v) => [`₺${v}`, 'Gelir']} />
             <Area
               type="monotone" dataKey="revenue"
               stroke="#E8272A" strokeWidth={2.5}

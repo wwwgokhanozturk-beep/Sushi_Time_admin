@@ -5,12 +5,12 @@ import PageLayout from '@/components/layout/PageLayout';
 
 export default function DriversMapPage() {
   return (
-    <PageLayout title="Drivers Map">
+    <PageLayout title="Kurye Haritası">
       <Box sx={{ textAlign: 'center', mt: 8 }}>
         <MapIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-        <Typography variant="h5" fontWeight={700} gutterBottom>Live Driver Map</Typography>
+        <Typography variant="h5" fontWeight={700} gutterBottom>Canlı Kurye Haritası</Typography>
         <Typography color="text.secondary">
-          Real-time driver tracking on map coming soon.
+          Haritada gerçek zamanlı kurye takibi yakında.
         </Typography>
       </Box>
     </PageLayout>

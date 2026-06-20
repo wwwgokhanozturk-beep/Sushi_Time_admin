@@ -13,7 +13,7 @@ import NotificationBell  from '@/components/ui/NotificationBell';
 import ChatNotificationBell from '@/components/ui/ChatNotificationBell';
 import { isAlerting, subscribeAlerting, stopAlert } from '@/utils/alertSound';
 
-export default function Topbar({ onMenuClick, title = 'Dashboard' }) {
+export default function Topbar({ onMenuClick, title = 'Panel' }) {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -49,7 +49,7 @@ export default function Topbar({ onMenuClick, title = 'Dashboard' }) {
           boxShadow: '0 8px 24px rgba(232,24,27,0.45)',
         }}
       >
-        Остановить звук
+        Sesi durdur
       </Button>
     )}
     <AppBar
@@ -78,7 +78,7 @@ export default function Topbar({ onMenuClick, title = 'Dashboard' }) {
         <NotificationBell />
 
         {/* Avatar / user menu */}
-        <Tooltip title="Account">
+        <Tooltip title="Hesap">
           <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ p: 0 }}>
             <Avatar sx={{ bgcolor: 'primary.main', width: 36, height: 36, fontSize: 14, fontWeight: 700 }}>
               {user?.name?.[0]?.toUpperCase() ?? 'A'}
@@ -94,7 +94,7 @@ export default function Topbar({ onMenuClick, title = 'Dashboard' }) {
           </Box>
           <Divider />
           <MuiMenuItem onClick={handleLogout} sx={{ color: 'error.main', gap: 1 }}>
-            <LogoutIcon fontSize="small" /> Logout
+            <LogoutIcon fontSize="small" /> Çıkış
           </MuiMenuItem>
         </Menu>
       </Toolbar>

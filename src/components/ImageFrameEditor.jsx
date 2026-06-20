@@ -46,7 +46,7 @@ export default function ImageFrameEditor({ imageUrl, scale = 1, offsetX = 0, off
   return (
     <Box>
       <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-        Кадрирование (как видит клиент в меню) — тяните фото и крутите масштаб
+        Çerçeveleme (müşteri menüde nasıl görür) — fotoğrafı sürükleyin ve ölçeği ayarlayın
       </Typography>
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 1, alignItems: 'center' }}>
@@ -87,7 +87,7 @@ export default function ImageFrameEditor({ imageUrl, scale = 1, offsetX = 0, off
         <Box sx={{ flex: 1, width: '100%' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <ZoomInIcon fontSize="small" />
-            <Typography variant="body2">Масштаб: {scale.toFixed(2)}×</Typography>
+            <Typography variant="body2">Ölçek: {scale.toFixed(2)}×</Typography>
           </Box>
           <Slider
             value={scale}
@@ -103,7 +103,7 @@ export default function ImageFrameEditor({ imageUrl, scale = 1, offsetX = 0, off
             onClick={() => onChange?.({ scale: 1, offsetX: 0, offsetY: 0 })}
             sx={{ mt: 1 }}
           >
-            Сбросить
+            Sıfırla
           </Button>
         </Box>
       </Stack>
