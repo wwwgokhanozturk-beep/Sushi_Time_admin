@@ -1,4 +1,4 @@
-﻿// formatCurrency(), formatDate(), formatOrderStatus(), formatDistance() helpers
+// Number/format helpers for the admin UI.
 
 /**
  * Format a numeric price as Turkish Lira: ₺ 149,90

@@ -1,4 +1,4 @@
-﻿import api from './api';
+import api from './api';
 
 export const menuService = {
   getAll:    (params) => api.get('/menu', { params }),

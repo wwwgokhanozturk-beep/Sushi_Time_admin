@@ -1,4 +1,4 @@
-﻿﻿// Small inline badge with color variants for status display
+﻿// Small inline badge with color variants for status display
 
 import React from 'react';
 import { Chip } from '@mui/material';

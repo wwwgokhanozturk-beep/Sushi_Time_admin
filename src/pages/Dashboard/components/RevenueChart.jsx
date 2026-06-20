@@ -1,4 +1,4 @@
-﻿﻿// Recharts line/bar chart for daily/weekly revenue
+﻿// Recharts line/bar chart for daily/weekly revenue
 
 import React from 'react';
 import { Card, CardContent, Typography, Box } from '@mui/material';

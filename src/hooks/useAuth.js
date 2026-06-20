@@ -1,4 +1,4 @@
-﻿import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '@/store/authStore';
 
 // Custom hook: reads auth store, exposes login/logout, redirects if unauthenticated
 export function useAuth() {

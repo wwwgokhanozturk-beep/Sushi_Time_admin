@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Typography, Box } from '@mui/material';
 import MapIcon from '@mui/icons-material/Map';
 import PageLayout from '@/components/layout/PageLayout';

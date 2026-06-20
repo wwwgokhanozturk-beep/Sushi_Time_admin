@@ -1,4 +1,4 @@
-﻿﻿// Generic sortable/paginated data table with loading skeleton
+﻿// Generic sortable/paginated data table with loading skeleton
 // Re-exports MUI Table components for convenience — import from @mui/material directly in pages
 export {
   Table,

@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import {
   AppBar, Toolbar, IconButton, Typography,
   Avatar, Box, Tooltip, Menu, MenuItem as MuiMenuItem, Divider, Button,

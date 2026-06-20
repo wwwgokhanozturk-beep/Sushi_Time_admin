@@ -1,4 +1,4 @@
-﻿import api from './api';
+import api from './api';
 
 export const driverService = {
   getAll:         (params) => api.get('/drivers', { params }),

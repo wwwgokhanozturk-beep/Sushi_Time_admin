@@ -1,4 +1,4 @@
-﻿export const ORDER_STATUSES = [
+export const ORDER_STATUSES = [
   "pending",
   "confirmed",
   "preparing",
