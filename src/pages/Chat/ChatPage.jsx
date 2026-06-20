@@ -6,16 +6,19 @@ import {
   Button,
   CircularProgress,
   Divider,
+  IconButton,
   List,
   ListItemAvatar,
   ListItemButton,
   ListItemText,
   Paper,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import SendIcon from '@mui/icons-material/Send';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { io } from 'socket.io-client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
@@ -283,6 +286,23 @@ export default function ChatPage() {
     }
   };
 
+  const handleDeleteThread = async (e, thread) => {
+    e.stopPropagation();
+    if (!window.confirm(`${getCustomerName(thread)} ile sohbet silinsin mi? Tüm mesajlar kalıcı olarak silinecek.`)) return;
+    try {
+      await chatService.remove(thread._id);
+      queryClient.setQueryData(['chatThreads'], (old) => ({
+        ...(old || {}),
+        threads: (old?.threads || []).filter((t) => t._id !== thread._id),
+      }));
+      if (selectedThread?._id === thread._id) setSelectedThread(null);
+      markThreadRead(thread._id);
+      notify.success('Sohbet silindi');
+    } catch (err) {
+      notify.error(err.response?.data?.message || 'Silme başarısız');
+    }
+  };
+
   return (
     <PageLayout title="Sohbet">
       <Paper
@@ -317,7 +337,7 @@ export default function ChatPage() {
                     key={thread._id}
                     selected={active}
                     onClick={() => setSelectedThread(thread)}
-                    sx={{ alignItems: 'flex-start', py: 1.5 }}
+                    sx={{ alignItems: 'flex-start', py: 1.5, pr: 1, '&:hover .chat-del': { opacity: 1 } }}
                   >
                     <ListItemAvatar>
                       <Badge color="error" badgeContent={thread.unreadForAdmin || 0}>
@@ -328,10 +348,21 @@ export default function ChatPage() {
                     </ListItemAvatar>
                     <ListItemText
                       primary={getCustomerName(thread)}
-                      secondary={thread.lastMessage || 'No messages yet'}
+                      secondary={thread.lastMessage || 'Henüz mesaj yok'}
                       primaryTypographyProps={{ fontWeight: 800, noWrap: true }}
                       secondaryTypographyProps={{ noWrap: true }}
                     />
+                    <Tooltip title="Sohbeti sil">
+                      <IconButton
+                        className="chat-del"
+                        size="small"
+                        color="error"
+                        onClick={(e) => handleDeleteThread(e, thread)}
+                        sx={{ opacity: { xs: 1, md: 0 }, transition: 'opacity 0.15s', alignSelf: 'center' }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                   </ListItemButton>
                 );
               })}
