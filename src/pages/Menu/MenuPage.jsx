@@ -26,6 +26,8 @@ import ReorderIcon from "@mui/icons-material/Reorder";
 import PageLayout from "@/components/layout/PageLayout";
 import CategoryFilter from "./components/CategoryFilter";
 import CategoryOrderDialog from "./components/CategoryOrderDialog";
+import MenuOrderDialog from "./components/MenuOrderDialog";
+import SortIcon from "@mui/icons-material/SwapVert";
 import { useMenuItems, useDeleteMenuItem } from "@/hooks/useMenu";
 import { useNavigate } from "react-router-dom";
 import { formatPrice } from "@/utils/formatters";
@@ -51,9 +53,16 @@ export default function MenuPage() {
   const [category, setCategory] = useState("all");
   const [deleteId, setDeleteId] = useState(null);
   const [orderOpen, setOrderOpen] = useState(false);
+  const [itemOrderOpen, setItemOrderOpen] = useState(false);
   const deleteMut = useDeleteMenuItem();
 
   const { data: items = [], isLoading } = useMenuItems();
+
+  // Seçili kategorinin ürünleri (arama hariç) — sıralama için
+  const categoryItems =
+    category === "all"
+      ? []
+      : items.filter((i) => normalizeCategory(i.category) === normalizeCategory(category));
 
   const filtered = items.filter((item) => {
     const matchCat =
@@ -100,6 +109,15 @@ export default function MenuPage() {
           sx={{ maxWidth: 300 }}
         />
         <Box sx={{ display: "flex", gap: 1 }}>
+          {category !== "all" && (
+            <Button
+              variant="outlined"
+              startIcon={<SortIcon />}
+              onClick={() => setItemOrderOpen(true)}
+            >
+              Ürün Sıralaması
+            </Button>
+          )}
           <Button
             variant="outlined"
             startIcon={<ReorderIcon />}
@@ -122,6 +140,14 @@ export default function MenuPage() {
 
       {/* Drag-and-drop category order dialog */}
       <CategoryOrderDialog open={orderOpen} onClose={() => setOrderOpen(false)} />
+
+      {/* Drag-and-drop item order dialog (within a category) */}
+      <MenuOrderDialog
+        open={itemOrderOpen}
+        onClose={() => setItemOrderOpen(false)}
+        items={categoryItems}
+        categoryLabel={category !== "all" ? formatCategoryLabel(category) : ""}
+      />
 
       {/* Items grid */}
       {isLoading ? (

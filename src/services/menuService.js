@@ -6,6 +6,7 @@ export const menuService = {
   create:    (data)   => api.post('/menu', data),
   update:    (id, data) => api.put(`/menu/${id}`, data),
   remove:    (id)     => api.delete(`/menu/${id}`),
+  reorder:   (items)  => api.put('/menu/reorder', { items }),
   categories:()       => api.get('/menu/categories'),
   uploadImage: (file) => {
     const fd = new FormData();
