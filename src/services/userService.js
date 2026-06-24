@@ -7,4 +7,6 @@ export const userService = {
     api.get('/users', { params }),
   updateUser: (id, data) =>
     api.put(`/users/${id}`, data),
+  deleteUser: (id) =>
+    api.delete(`/users/${id}`),
 };

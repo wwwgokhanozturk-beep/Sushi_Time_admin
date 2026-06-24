@@ -6,4 +6,5 @@ export const orderService = {
   getById:       (id)     => api.get(`/orders/${id}`),
   updateStatus:  (id, status) => api.patch(`/orders/${id}/status`, { status }),
   cancel:        (id)     => api.delete(`/orders/${id}`),
+  remove:        (id)     => api.delete(`/orders/${id}/permanent`),
 };

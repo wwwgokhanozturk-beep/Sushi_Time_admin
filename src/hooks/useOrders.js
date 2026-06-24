@@ -30,6 +30,7 @@ export function useOrders(params = {}) {
     },
     'order:status_changed': () => qc.invalidateQueries({ queryKey: ['orders'] }),
     'order:cancelled': () => qc.invalidateQueries({ queryKey: ['orders'] }),
+    'order:deleted': () => qc.invalidateQueries({ queryKey: ['orders'] }),
   });
 
   // Notify admin when a loyalty-discounted order appears for the first time
@@ -78,5 +79,17 @@ export function useCancelOrder() {
       toast.success('Sipariş iptal edildi');
     },
     onError: (err) => toast.error(err.response?.data?.message || 'İptal başarısız'),
+  });
+}
+
+export function useDeleteOrder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => orderService.remove(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['orders'] });
+      toast.success('Sipariş silindi');
+    },
+    onError: (err) => toast.error(err.response?.data?.message || 'Silme başarısız'),
   });
 }

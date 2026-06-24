@@ -3,14 +3,18 @@ import {
   Box, Card, CardContent, Typography, TextField, InputAdornment,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Chip, CircularProgress, Alert, Stack, ToggleButtonGroup,
-  ToggleButton, Pagination, Avatar,
+  ToggleButton, Pagination, Avatar, IconButton, Tooltip, Button,
+  Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import StarsIcon from '@mui/icons-material/Stars';
 import PeopleIcon from '@mui/icons-material/People';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { userService } from '@/services/userService';
+import { useAuthStore } from '@/store/authStore';
 import PageLayout from '@/components/layout/PageLayout';
 
 const PAGE_SIZE = 15;
@@ -75,6 +79,24 @@ export default function UsersPage() {
 
   const users = data?.users || [];
   const pagination = data?.pagination;
+
+  const qc = useQueryClient();
+  const currentUserId = useAuthStore((s) => s.user?._id);
+  const [toDelete, setToDelete] = useState(null); // user pending delete confirmation
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => userService.deleteUser(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['adminUsers'] });
+      toast.success('Kullanıcı silindi');
+    },
+    onError: (err) => toast.error(err.response?.data?.message || 'Silme başarısız'),
+    onSettled: () => setToDelete(null),
+  });
+
+  const confirmDelete = () => {
+    if (toDelete) deleteMutation.mutate(toDelete._id);
+  };
 
   const handleLoyalFilter = (_, val) => {
     if (val !== null) {
@@ -168,12 +190,13 @@ export default function UsersPage() {
                 <TableCell sx={{ fontWeight: 700 }}>Siparişler</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Sadakat</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Kayıt</TableCell>
+                <TableCell sx={{ fontWeight: 700 }} align="right">İşlem</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
+                  <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
                     <CircularProgress size={32} />
                   </TableCell>
                 </TableRow>
@@ -181,7 +204,7 @@ export default function UsersPage() {
 
               {!isLoading && users.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
+                  <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
                     <PeopleIcon sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
                     <Typography color="text.secondary">
                       {loyalFilter === 'loyal'
@@ -247,6 +270,20 @@ export default function UsersPage() {
                       {new Date(user.createdAt).toLocaleDateString('en-GB')}
                     </Typography>
                   </TableCell>
+                  <TableCell align="right">
+                    <Tooltip title={currentUserId === user._id ? 'Kendinizi silemezsiniz' : 'Kullanıcıyı sil'}>
+                      <span>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          disabled={currentUserId === user._id}
+                          onClick={() => setToDelete(user)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -266,6 +303,27 @@ export default function UsersPage() {
           </Box>
         )}
       </Card>
+
+      <Dialog open={!!toDelete} onClose={() => setToDelete(null)}>
+        <DialogTitle>Kullanıcıyı sil</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            <strong>{toDelete?.name}</strong> ({toDelete?.email}) kalıcı olarak
+            silinecek. Bu işlem geri alınamaz.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setToDelete(null)}>Vazgeç</Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={confirmDelete}
+            disabled={deleteMutation.isPending}
+          >
+            {deleteMutation.isPending ? 'Siliniyor…' : 'Sil'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </PageLayout>
   );
 }

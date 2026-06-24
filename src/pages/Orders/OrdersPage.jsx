@@ -3,15 +3,17 @@ import {
   Box, Card, Table, TableHead, TableRow, TableCell, TableBody,
   TableContainer, TablePagination, Tabs, Tab, TextField, InputAdornment,
   IconButton, Tooltip, CircularProgress, Typography, Chip, Button,
+  Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
 } from '@mui/material';
 import SearchIcon     from '@mui/icons-material/Search';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import RefreshIcon    from '@mui/icons-material/Refresh';
 import PrintIcon      from '@mui/icons-material/Print';
 import DownloadIcon   from '@mui/icons-material/Download';
+import DeleteIcon     from '@mui/icons-material/Delete';
 import PageLayout     from '@/components/layout/PageLayout';
 import OrderStatusBadge from './components/OrderStatusBadge';
-import { useOrders }  from '@/hooks/useOrders';
+import { useOrders, useDeleteOrder }  from '@/hooks/useOrders';
 import { usePrintReceipt } from '@/hooks/usePrintReceipt';
 import { formatPrice } from '@/utils/formatters';
 import { STATUS_LABELS } from '@/utils/constants';
@@ -27,6 +29,13 @@ export default function OrdersPage() {
   const [search, setSearch] = useState('');
   const [page, setPage]     = useState(0);
   const [rowsPerPage]       = useState(10);
+  const [toDelete, setToDelete] = useState(null); // order pending delete confirmation
+  const deleteOrder = useDeleteOrder();
+
+  const confirmDelete = () => {
+    if (!toDelete) return;
+    deleteOrder.mutate(toDelete._id, { onSettled: () => setToDelete(null) });
+  };
 
   const statusFilter = STATUS_TABS[tab] === 'all' ? undefined : STATUS_TABS[tab];
   const { data: orders = [], isLoading, refetch, isFetching } = useOrders(
@@ -162,6 +171,15 @@ export default function OrdersPage() {
                           <PrintIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
+                      <Tooltip title="Siparişi sil">
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={(e) => { e.stopPropagation(); setToDelete(order); }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -176,6 +194,27 @@ export default function OrdersPage() {
           rowsPerPageOptions={[10]}
         />
       </Card>
+
+      <Dialog open={!!toDelete} onClose={() => setToDelete(null)}>
+        <DialogTitle>Siparişi sil</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            #{toDelete?._id?.slice(-6).toUpperCase()} numaralı sipariş kalıcı olarak
+            silinecek. Bu işlem geri alınamaz.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setToDelete(null)}>Vazgeç</Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={confirmDelete}
+            disabled={deleteOrder.isPending}
+          >
+            {deleteOrder.isPending ? 'Siliniyor…' : 'Sil'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
     </PageLayout>
   );
