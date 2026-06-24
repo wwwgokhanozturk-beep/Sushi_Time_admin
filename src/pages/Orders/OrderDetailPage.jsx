@@ -8,12 +8,14 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PrintIcon     from '@mui/icons-material/Print';
 import CancelIcon    from '@mui/icons-material/Cancel';
+import RoomIcon      from '@mui/icons-material/Room';
 import PageLayout    from '@/components/layout/PageLayout';
 import OrderStatusBadge from './components/OrderStatusBadge';
 import { useOrder, useUpdateOrderStatus, useCancelOrder } from '@/hooks/useOrders';
 import { usePrintReceipt } from '@/hooks/usePrintReceipt';
 import { formatPrice } from '@/utils/formatters';
 import { ORDER_STATUSES, STATUS_LABELS, STATUS_COLORS } from '@/utils/constants';
+import { buildMapsUrl, isGpsPin } from '@/utils/maps';
 import dayjs from 'dayjs';
 
 function Row({ label, value, strong, color }) {
@@ -73,6 +75,8 @@ export default function OrderDetailPage() {
     order.apartment && `Daire: ${order.apartment}`,
     order.doorCode && `Kapı kodu: ${order.doorCode}`,
   ].filter(Boolean).join(', ');
+
+  const mapsUrl = buildMapsUrl(order);
 
   const handleCancel = () => {
     if (window.confirm('Bu siparişi iptal et? Bu işlem geri alınamaz.')) {
@@ -198,6 +202,21 @@ export default function OrderDetailPage() {
                 <Row label="Ad" value={order.customerName} />
                 <Row label="Telefon" value={order.phone} />
                 <Row label="Adres" value={address} />
+                {mapsUrl && (
+                  <Button
+                    component="a"
+                    href={mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    size="small"
+                    fullWidth
+                    variant="outlined"
+                    startIcon={<RoomIcon />}
+                    sx={{ mt: 1, justifyContent: 'flex-start' }}
+                  >
+                    {isGpsPin(order) ? 'Haritada aç · GPS konumu' : 'Haritada aç'}
+                  </Button>
+                )}
                 <Row label="Notlar" value={order.notes} />
               </CardContent>
             </Card>

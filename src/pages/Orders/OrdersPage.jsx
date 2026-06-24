@@ -11,12 +11,14 @@ import RefreshIcon    from '@mui/icons-material/Refresh';
 import PrintIcon      from '@mui/icons-material/Print';
 import DownloadIcon   from '@mui/icons-material/Download';
 import DeleteIcon     from '@mui/icons-material/Delete';
+import RoomIcon       from '@mui/icons-material/Room';
 import PageLayout     from '@/components/layout/PageLayout';
 import OrderStatusBadge from './components/OrderStatusBadge';
 import { useOrders, useDeleteOrder }  from '@/hooks/useOrders';
 import { usePrintReceipt } from '@/hooks/usePrintReceipt';
 import { formatPrice } from '@/utils/formatters';
 import { STATUS_LABELS } from '@/utils/constants';
+import { buildMapsUrl } from '@/utils/maps';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 
@@ -170,6 +172,21 @@ export default function OrdersPage() {
                         <IconButton size="small" onClick={(e) => handlePrint(e, order)}>
                           <PrintIcon fontSize="small" />
                         </IconButton>
+                      </Tooltip>
+                      <Tooltip title={buildMapsUrl(order) ? 'Haritada aç' : 'Adres yok'}>
+                        <span>
+                          <IconButton
+                            size="small"
+                            disabled={!buildMapsUrl(order)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const url = buildMapsUrl(order);
+                              if (url) window.open(url, '_blank', 'noopener');
+                            }}
+                          >
+                            <RoomIcon fontSize="small" />
+                          </IconButton>
+                        </span>
                       </Tooltip>
                       <Tooltip title="Siparişi sil">
                         <IconButton
