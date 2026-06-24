@@ -2,8 +2,8 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box, Card, CardContent, Grid, Typography, Divider, Button, IconButton,
-  Table, TableHead, TableRow, TableCell, TableBody, Select, MenuItem,
-  FormControl, InputLabel, CircularProgress, Chip, Stack, Tooltip,
+  Table, TableHead, TableRow, TableCell, TableBody,
+  CircularProgress, Chip, Stack, Tooltip,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PrintIcon     from '@mui/icons-material/Print';
@@ -13,7 +13,7 @@ import OrderStatusBadge from './components/OrderStatusBadge';
 import { useOrder, useUpdateOrderStatus, useCancelOrder } from '@/hooks/useOrders';
 import { usePrintReceipt } from '@/hooks/usePrintReceipt';
 import { formatPrice } from '@/utils/formatters';
-import { ORDER_STATUSES, STATUS_LABELS } from '@/utils/constants';
+import { ORDER_STATUSES, STATUS_LABELS, STATUS_COLORS } from '@/utils/constants';
 import dayjs from 'dayjs';
 
 function Row({ label, value, strong, color }) {
@@ -73,10 +73,6 @@ export default function OrderDetailPage() {
     order.apartment && `Daire: ${order.apartment}`,
     order.doorCode && `Kapı kodu: ${order.doorCode}`,
   ].filter(Boolean).join(', ');
-
-  const handleStatusChange = (e) => {
-    updateStatus.mutate({ id: order._id, status: e.target.value });
-  };
 
   const handleCancel = () => {
     if (window.confirm('Bu siparişi iptal et? Bu işlem geri alınamaz.')) {
@@ -165,21 +161,26 @@ export default function OrderDetailPage() {
             <Card>
               <CardContent>
                 <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5 }}>Durum</Typography>
-                <FormControl fullWidth size="small" disabled={isCancelled}>
-                  <InputLabel id="status-label">Sipariş durumu</InputLabel>
-                  <Select
-                    labelId="status-label"
-                    label="Sipariş durumu"
-                    value={order.status}
-                    onChange={handleStatusChange}
-                  >
-                    {ORDER_STATUSES.map((s) => (
-                      <MenuItem key={s} value={s}>
+                <Stack spacing={1}>
+                  {ORDER_STATUSES.map((s) => {
+                    const active = order.status === s;
+                    return (
+                      <Button
+                        key={s}
+                        fullWidth
+                        size="small"
+                        disableElevation
+                        variant={active ? 'contained' : 'outlined'}
+                        color={STATUS_COLORS[s] || 'primary'}
+                        onClick={() => !active && updateStatus.mutate({ id: order._id, status: s })}
+                        disabled={isCancelled || updateStatus.isPending}
+                        sx={{ justifyContent: 'flex-start', fontWeight: active ? 700 : 500 }}
+                      >
                         {STATUS_LABELS[s] || s}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                      </Button>
+                    );
+                  })}
+                </Stack>
                 {updateStatus.isPending && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5 }}>
                     <CircularProgress size={16} />
