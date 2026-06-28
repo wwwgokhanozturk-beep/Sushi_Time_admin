@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Box, Slider, Typography, Button, Stack } from '@mui/material';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
@@ -21,6 +21,18 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 export default function ImageFrameEditor({ imageUrl, scale = 1, offsetX = 0, offsetY = 0, onChange }) {
   const dragRef = useRef(null); // { startX, startY, baseX, baseY }
   const [dragging, setDragging] = useState(false);
+  // URL без расширения (напр. UploadThing ufs.sh/f/...) может быть видео.
+  // Пробуем <img>; если не загрузился — переключаемся на <video>.
+  const [imgFailed, setImgFailed] = useState(false);
+  useEffect(() => { setImgFailed(false); }, [imageUrl]);
+  const showVideo = isVideo(imageUrl) || imgFailed;
+
+  const mediaStyle = {
+    width: '100%', height: '100%', objectFit: 'cover',
+    transform: `translate(${offsetX}%, ${offsetY}%) scale(${scale})`,
+    transformOrigin: 'center',
+    pointerEvents: 'none',
+  };
 
   const emit = useCallback((patch) => {
     onChange?.({ scale, offsetX, offsetY, ...patch });
@@ -73,29 +85,20 @@ export default function ImageFrameEditor({ imageUrl, scale = 1, offsetX = 0, off
             userSelect: 'none',
           }}
         >
-          {isVideo(imageUrl) ? (
+          {showVideo ? (
             <video
               src={imageUrl}
               autoPlay muted loop playsInline
               draggable={false}
-              style={{
-                width: '100%', height: '100%', objectFit: 'cover',
-                transform: `translate(${offsetX}%, ${offsetY}%) scale(${scale})`,
-                transformOrigin: 'center',
-                pointerEvents: 'none',
-              }}
+              style={mediaStyle}
             />
           ) : (
             <img
               src={imageUrl}
               alt="preview"
               draggable={false}
-              style={{
-                width: '100%', height: '100%', objectFit: 'cover',
-                transform: `translate(${offsetX}%, ${offsetY}%) scale(${scale})`,
-                transformOrigin: 'center',
-                pointerEvents: 'none',
-              }}
+              onError={() => setImgFailed(true)}
+              style={mediaStyle}
             />
           )}
         </Box>
