@@ -8,6 +8,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SaveIcon      from '@mui/icons-material/Save';
 import PageLayout         from '@/components/layout/PageLayout';
 import ImageFrameEditor  from '@/components/ImageFrameEditor';
+import PromoBannerPreview from '@/components/PromoBannerPreview';
 import { usePromotion, useCreatePromotion, useUpdatePromotion } from '@/hooks/usePromotions';
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -113,6 +114,14 @@ export default function PromotionFormPage() {
 
   const saving = createMut.isPending || updateMut.isPending;
 
+  // Заголовок/описание для превью по активной языковой вкладке (фолбэк на базовый — как pick() в веб-клиенте)
+  const prevTitle = langTab === 1 ? (form.title_ru || form.title)
+                  : langTab === 2 ? (form.title_tr || form.title)
+                  : form.title;
+  const prevDesc  = langTab === 1 ? (form.description_ru || form.description)
+                  : langTab === 2 ? (form.description_tr || form.description)
+                  : form.description;
+
   if (isEdit && loadingItem) {
     return <PageLayout title="Yükleniyor…"><Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}><CircularProgress /></Box></PageLayout>;
   }
@@ -183,6 +192,25 @@ export default function PromotionFormPage() {
                     onChange={({ scale, offsetX, offsetY }) =>
                       setForm((prev) => ({ ...prev, imageScale: scale, imageOffsetX: offsetX, imageOffsetY: offsetY }))
                     }
+                  />
+                </Grid>
+              )}
+
+              {/* Превью «как на сайте» — мини-баннер веб-клиента */}
+              {(form.imageUrl || form.title) && (
+                <Grid item xs={12}>
+                  <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
+                    Sitede nasıl görünür (banner)
+                  </Typography>
+                  <PromoBannerPreview
+                    imageUrl={form.imageUrl}
+                    scale={form.imageScale}
+                    offsetX={form.imageOffsetX}
+                    offsetY={form.imageOffsetY}
+                    badge={form.badge}
+                    title={prevTitle}
+                    description={prevDesc}
+                    discountPercent={form.discountPercent}
                   />
                 </Grid>
               )}
