@@ -56,7 +56,7 @@ export default function PromoBannerPreview({
   const endDrag = () => { dragRef.current = null; setDragging(false); };
 
   const mediaStyle = {
-    width: '100%', height: '100%', objectFit: 'cover', display: 'block',
+    width: '100%', height: '100%', objectFit: 'contain', display: 'block',
     transform: `translate(${offsetX}%, ${offsetY}%) scale(${scale})`,
     transformOrigin: 'center',
     pointerEvents: 'none',
