@@ -7,4 +7,6 @@ export const settingsService = {
   updateContact:       (data)          => api.put('/settings/contact', data),
   getSlideshow:        ()              => api.get('/settings/slideshow'),
   updateSlideshow:     (data)          => api.put('/settings/slideshow', data),
+  getBusinessHours:    ()              => api.get('/settings/business-hours'),
+  updateBusinessHours: (data)          => api.put('/settings/business-hours', data),
 };

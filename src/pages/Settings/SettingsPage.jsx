@@ -10,6 +10,7 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import SlideshowIcon from '@mui/icons-material/Slideshow';
 import PageLayout from '@/components/layout/PageLayout';
 import { settingsService } from '@/services/settingsService';
+import BusinessHoursCard from './components/BusinessHoursCard';
 
 export default function SettingsPage() {
   // ── İletişim ─────────────────────────────────────────────────────────────
@@ -82,6 +83,9 @@ export default function SettingsPage() {
   return (
     <PageLayout title="Ayarlar">
       <Box sx={{ maxWidth: 560, display: 'flex', flexDirection: 'column', gap: 3 }}>
+
+        {/* Çalışma saatleri */}
+        <BusinessHoursCard />
 
         {/* İletişim */}
         <Card>
