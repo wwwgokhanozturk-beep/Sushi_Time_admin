@@ -1,4 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Box, Slider, Typography, Button } from '@mui/material';
+import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
 // Мини-копия промо-баннера из веб-клиента (web_client BannerCarousel).
 // Показывает админу, как кампания выглядит на сайте — с тем же кадрированием
@@ -62,37 +65,62 @@ export default function PromoBannerPreview({
   const hasDiscount = discountPercent != null && discountPercent !== '';
 
   return (
-    <div
-      ref={frameRef}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={endDrag}
-      onPointerLeave={endDrag}
-      style={{
-        ...st.wrap,
-        cursor: interactive ? (dragging ? 'grabbing' : 'grab') : 'default',
-        touchAction: interactive ? 'none' : 'auto',
-      }}
-    >
-      {imageUrl ? (
-        showVideo ? (
-          <video src={imageUrl} style={mediaStyle} autoPlay muted loop playsInline />
+    <Box>
+      {/* Баннер — перетаскивание меняет offset */}
+      <div
+        ref={frameRef}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerLeave={endDrag}
+        style={{
+          ...st.wrap,
+          cursor: interactive ? (dragging ? 'grabbing' : 'grab') : 'default',
+          touchAction: interactive ? 'none' : 'auto',
+        }}
+      >
+        {imageUrl ? (
+          showVideo ? (
+            <video src={imageUrl} style={mediaStyle} autoPlay muted loop playsInline />
+          ) : (
+            <img src={imageUrl} alt="" style={mediaStyle} onError={() => setImgFailed(true)} />
+          )
         ) : (
-          <img src={imageUrl} alt="" style={mediaStyle} onError={() => setImgFailed(true)} />
-        )
-      ) : (
-        <div style={st.placeholder}>🍣</div>
-      )}
+          <div style={st.placeholder}>🍣</div>
+        )}
 
-      <div style={st.overlay} />
+        <div style={st.overlay} />
 
-      <div style={st.content}>
-        {badge ? <span style={{ ...st.badge, background: badgeColor }}>{badge}</span> : null}
-        {title ? <div style={st.title}>{title}</div> : null}
-        {description ? <div style={st.desc}>{description}</div> : null}
-        {hasDiscount ? <span style={st.chip}>−{discountPercent}%</span> : null}
+        <div style={st.content}>
+          {badge ? <span style={{ ...st.badge, background: badgeColor }}>{badge}</span> : null}
+          {title ? <div style={st.title}>{title}</div> : null}
+          {description ? <div style={st.desc}>{description}</div> : null}
+          {hasDiscount ? <span style={st.chip}>−{discountPercent}%</span> : null}
+        </div>
       </div>
-    </div>
+
+      {/* Слайдер зума + сброс */}
+      {interactive && (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 1 }}>
+          <ZoomInIcon fontSize="small" sx={{ color: 'text.secondary', flexShrink: 0 }} />
+          <Slider
+            value={scale}
+            min={0.5} max={3} step={0.05}
+            onChange={(_, v) => onChange?.({ scale: v })}
+            sx={{ flex: 1 }}
+          />
+          <Typography variant="body2" sx={{ minWidth: 44, textAlign: 'right' }}>
+            {scale.toFixed(2)}×
+          </Typography>
+          <Button size="small" startIcon={<RestartAltIcon />}
+            onClick={() => onChange?.({ scale: 1, offsetX: 0, offsetY: 0 })}
+            sx={{ flexShrink: 0 }}
+          >
+            Sıfırla
+          </Button>
+        </Box>
+      )}
+    </Box>
   );
 }
 

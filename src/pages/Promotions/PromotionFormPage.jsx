@@ -7,7 +7,6 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SaveIcon      from '@mui/icons-material/Save';
 import PageLayout         from '@/components/layout/PageLayout';
-import ImageFrameEditor  from '@/components/ImageFrameEditor';
 import PromoBannerPreview from '@/components/PromoBannerPreview';
 import { usePromotion, useCreatePromotion, useUpdatePromotion } from '@/hooks/usePromotions';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -182,20 +181,6 @@ export default function PromotionFormPage() {
                 <TextField fullWidth label="Image URL" value={form.imageUrl}
                   onChange={set('imageUrl')} placeholder="https://example.com/promo.jpg" />
               </Grid>
-              {form.imageUrl && (
-                <Grid item xs={12}>
-                  <ImageFrameEditor
-                    imageUrl={form.imageUrl}
-                    scale={form.imageScale}
-                    offsetX={form.imageOffsetX}
-                    offsetY={form.imageOffsetY}
-                    onChange={({ scale, offsetX, offsetY }) =>
-                      setForm((prev) => ({ ...prev, imageScale: scale, imageOffsetX: offsetX, imageOffsetY: offsetY }))
-                    }
-                  />
-                </Grid>
-              )}
-
               {/* Превью «как на сайте» — мини-баннер веб-клиента */}
               {(form.imageUrl || form.title) && (
                 <Grid item xs={12}>
@@ -211,8 +196,13 @@ export default function PromotionFormPage() {
                     title={prevTitle}
                     description={prevDesc}
                     discountPercent={form.discountPercent}
-                    onChange={({ offsetX, offsetY }) =>
-                      setForm((prev) => ({ ...prev, imageOffsetX: offsetX, imageOffsetY: offsetY }))
+                    onChange={({ scale, offsetX, offsetY }) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        ...(scale     !== undefined && { imageScale:   scale }),
+                        ...(offsetX   !== undefined && { imageOffsetX: offsetX }),
+                        ...(offsetY   !== undefined && { imageOffsetY: offsetY }),
+                      }))
                     }
                   />
                 </Grid>
