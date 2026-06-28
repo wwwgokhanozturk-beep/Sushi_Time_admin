@@ -56,6 +56,7 @@ export default function PromoBannerPreview({
   const endDrag = () => { dragRef.current = null; setDragging(false); };
 
   const mediaStyle = {
+    position: 'relative', zIndex: 1,
     width: '100%', height: '100%', objectFit: 'contain', display: 'block',
     transform: `translate(${offsetX}%, ${offsetY}%) scale(${scale})`,
     transformOrigin: 'center',
@@ -80,11 +81,18 @@ export default function PromoBannerPreview({
         }}
       >
         {imageUrl ? (
-          showVideo ? (
-            <video src={imageUrl} style={mediaStyle} autoPlay muted loop playsInline />
-          ) : (
-            <img src={imageUrl} alt="" style={mediaStyle} onError={() => setImgFailed(true)} />
-          )
+          <>
+            {/* Размытая подложка того же фото — заполняет баннер, пока фото
+                показывается целиком (contain). Для видео не нужна. */}
+            {!showVideo && (
+              <div style={{ ...st.backdrop, backgroundImage: `url("${imageUrl}")` }} />
+            )}
+            {showVideo ? (
+              <video src={imageUrl} style={mediaStyle} autoPlay muted loop playsInline />
+            ) : (
+              <img src={imageUrl} alt="" style={mediaStyle} onError={() => setImgFailed(true)} />
+            )}
+          </>
         ) : (
           <div style={st.placeholder}>🍣</div>
         )}
@@ -137,14 +145,19 @@ const st = {
     justifyContent: 'center', fontSize: 56,
     background: `linear-gradient(135deg, ${PRIMARY} 0%, ${SECONDARY} 100%)`,
   },
+  backdrop: {
+    position: 'absolute', inset: 0, zIndex: 0,
+    backgroundSize: 'cover', backgroundPosition: 'center',
+    filter: 'blur(20px)', transform: 'scale(1.15)', pointerEvents: 'none',
+  },
   overlay: {
-    position: 'absolute', inset: 0, pointerEvents: 'none',
+    position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
     background: 'linear-gradient(90deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0) 70%)',
   },
   content: {
     position: 'absolute', top: 0, bottom: 0, left: 0, width: '60%',
     padding: '0 6%', display: 'flex', flexDirection: 'column',
-    justifyContent: 'center', gap: 6, pointerEvents: 'none',
+    justifyContent: 'center', gap: 6, pointerEvents: 'none', zIndex: 3,
   },
   badge: {
     alignSelf: 'flex-start', padding: '3px 9px', borderRadius: 999,
