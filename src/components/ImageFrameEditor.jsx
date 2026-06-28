@@ -7,6 +7,9 @@ const FRAME = 240;          // размер квадратной рамки-пр
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 3;
 
+const VIDEO_RE = /\.(mp4|m4v|mov|webm|ogg|m3u8)(\?.*)?$/i;
+const isVideo = (url) => typeof url === 'string' && VIDEO_RE.test(url);
+
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 /**
@@ -70,17 +73,31 @@ export default function ImageFrameEditor({ imageUrl, scale = 1, offsetX = 0, off
             userSelect: 'none',
           }}
         >
-          <img
-            src={imageUrl}
-            alt="preview"
-            draggable={false}
-            style={{
-              width: '100%', height: '100%', objectFit: 'cover',
-              transform: `translate(${offsetX}%, ${offsetY}%) scale(${scale})`,
-              transformOrigin: 'center',
-              pointerEvents: 'none',
-            }}
-          />
+          {isVideo(imageUrl) ? (
+            <video
+              src={imageUrl}
+              autoPlay muted loop playsInline
+              draggable={false}
+              style={{
+                width: '100%', height: '100%', objectFit: 'cover',
+                transform: `translate(${offsetX}%, ${offsetY}%) scale(${scale})`,
+                transformOrigin: 'center',
+                pointerEvents: 'none',
+              }}
+            />
+          ) : (
+            <img
+              src={imageUrl}
+              alt="preview"
+              draggable={false}
+              style={{
+                width: '100%', height: '100%', objectFit: 'cover',
+                transform: `translate(${offsetX}%, ${offsetY}%) scale(${scale})`,
+                transformOrigin: 'center',
+                pointerEvents: 'none',
+              }}
+            />
+          )}
         </Box>
 
         {/* Управление */}
