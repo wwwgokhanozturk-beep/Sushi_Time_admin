@@ -6,7 +6,8 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SaveIcon      from '@mui/icons-material/Save';
-import PageLayout    from '@/components/layout/PageLayout';
+import PageLayout         from '@/components/layout/PageLayout';
+import ImageFrameEditor  from '@/components/ImageFrameEditor';
 import { usePromotion, useCreatePromotion, useUpdatePromotion } from '@/hooks/usePromotions';
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -16,6 +17,7 @@ const EMPTY = {
   title: '', title_ru: '', title_tr: '',
   description: '', description_ru: '', description_tr: '',
   imageUrl: '',
+  imageScale: 1, imageOffsetX: 0, imageOffsetY: 0,
   badge: '',
   discountPercent: '',
   promoCode: '',
@@ -51,6 +53,9 @@ export default function PromotionFormPage() {
         description_ru: existing.description_ru || '',
         description_tr: existing.description_tr || '',
         imageUrl: existing.imageUrl || '',
+        imageScale:   existing.imageScale   ?? 1,
+        imageOffsetX: existing.imageOffsetX ?? 0,
+        imageOffsetY: existing.imageOffsetY ?? 0,
         badge:    existing.badge    || '',
         discountPercent: existing.discountPercent != null ? String(existing.discountPercent) : '',
         promoCode: existing.promoCode || '',
@@ -87,7 +92,10 @@ export default function PromotionFormPage() {
       description:    form.description.trim(),
       description_ru: form.description_ru.trim(),
       description_tr: form.description_tr.trim(),
-      imageUrl:  form.imageUrl.trim(),
+      imageUrl:     form.imageUrl.trim(),
+      imageScale:   form.imageScale,
+      imageOffsetX: form.imageOffsetX,
+      imageOffsetY: form.imageOffsetY,
       badge:     form.badge || null,
       discountPercent: form.discountPercent !== '' ? Number(form.discountPercent) : null,
       promoCode: form.promoCode.trim().toUpperCase(),
@@ -167,10 +175,15 @@ export default function PromotionFormPage() {
               </Grid>
               {form.imageUrl && (
                 <Grid item xs={12}>
-                  <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>Önizleme</Typography>
-                  <Box component="img" src={form.imageUrl} alt="preview"
-                    sx={{ width: '100%', maxHeight: 180, borderRadius: 2, objectFit: 'cover' }}
-                    onError={(e) => { e.target.style.display = 'none'; }} />
+                  <ImageFrameEditor
+                    imageUrl={form.imageUrl}
+                    scale={form.imageScale}
+                    offsetX={form.imageOffsetX}
+                    offsetY={form.imageOffsetY}
+                    onChange={({ scale, offsetX, offsetY }) =>
+                      setForm((prev) => ({ ...prev, imageScale: scale, imageOffsetX: offsetX, imageOffsetY: offsetY }))
+                    }
+                  />
                 </Grid>
               )}
 
