@@ -200,7 +200,7 @@ export default function PromotionFormPage() {
               {(form.imageUrl || form.title) && (
                 <Grid item xs={12}>
                   <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
-                    Sitede nasıl görünür (banner)
+                    Sitede nasıl görünür (banner) — sürükleyerek konumlandırın
                   </Typography>
                   <PromoBannerPreview
                     imageUrl={form.imageUrl}
@@ -211,6 +211,9 @@ export default function PromotionFormPage() {
                     title={prevTitle}
                     description={prevDesc}
                     discountPercent={form.discountPercent}
+                    onChange={({ offsetX, offsetY }) =>
+                      setForm((prev) => ({ ...prev, imageOffsetX: offsetX, imageOffsetY: offsetY }))
+                    }
                   />
                 </Grid>
               )}
