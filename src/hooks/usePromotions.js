@@ -35,6 +35,30 @@ export function useUpdatePromotion() {
   });
 }
 
+// Persist a new display order. Optimistically reorders the cached list so the
+// cards move instantly, then reconciles with the server response.
+export function useReorderPromotions() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ids) => promotionService.reorder(ids),
+    onMutate: async (ids) => {
+      await qc.cancelQueries({ queryKey: ['promotions'] });
+      const prev = qc.getQueryData(['promotions']);
+      if (Array.isArray(prev)) {
+        const byId = new Map(prev.map((p) => [p._id, p]));
+        const next = ids.map((id) => byId.get(id)).filter(Boolean);
+        qc.setQueryData(['promotions'], next);
+      }
+      return { prev };
+    },
+    onError: (err, _ids, ctx) => {
+      if (ctx?.prev) qc.setQueryData(['promotions'], ctx.prev);
+      toast.error(err.response?.data?.message || 'Sıralama başarısız');
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ['promotions'] }),
+  });
+}
+
 export function useDeletePromotion() {
   const qc = useQueryClient();
   return useMutation({

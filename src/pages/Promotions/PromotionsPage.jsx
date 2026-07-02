@@ -7,8 +7,10 @@ import {
 import AddIcon    from '@mui/icons-material/Add';
 import EditIcon   from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ArrowUpwardIcon   from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import PageLayout from '@/components/layout/PageLayout';
-import { usePromotions, useDeletePromotion, useUpdatePromotion } from '@/hooks/usePromotions';
+import { usePromotions, useDeletePromotion, useUpdatePromotion, useReorderPromotions } from '@/hooks/usePromotions';
 import { useNavigate } from 'react-router-dom';
 
 const BADGE_COLORS = {
@@ -36,6 +38,7 @@ export default function PromotionsPage() {
   const { data: promos = [], isLoading } = usePromotions();
   const deleteMut = useDeletePromotion();
   const updateMut = useUpdatePromotion();
+  const reorderMut = useReorderPromotions();
   const [deleteId, setDeleteId] = useState(null);
 
   const handleDelete = () => {
@@ -44,6 +47,15 @@ export default function PromotionsPage() {
 
   const toggleActive = (promo) => {
     updateMut.mutate({ id: promo._id, data: { isActive: !promo.isActive } });
+  };
+
+  // Swap a card with its neighbour and persist the whole new order (1-2-3…).
+  const move = (index, dir) => {
+    const target = index + dir;
+    if (target < 0 || target >= promos.length) return;
+    const next = [...promos];
+    [next[index], next[target]] = [next[target], next[index]];
+    reorderMut.mutate(next.map((p) => p._id));
   };
 
   return (
@@ -62,11 +74,24 @@ export default function PromotionsPage() {
         </Typography>
       ) : (
         <Grid container spacing={2}>
-          {promos.map((promo) => {
+          {promos.map((promo, index) => {
             const status = promoStatus(promo);
             return (
               <Grid item xs={12} sm={6} md={4} key={promo._id}>
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                  {/* Display-order badge (1-2-3…) */}
+                  <Box
+                    sx={{
+                      position: 'absolute', top: 12, left: 12, zIndex: 1,
+                      width: 28, height: 28, borderRadius: '50%',
+                      bgcolor: 'primary.main', color: '#fff',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontWeight: 800, fontSize: 14, boxShadow: 2,
+                    }}
+                  >
+                    {index + 1}
+                  </Box>
+
                   {/* Status chip */}
                   <Chip
                     label={status.label}
@@ -120,6 +145,22 @@ export default function PromotionsPage() {
                         disabled={updateMut.isPending}
                       />
                       <Box>
+                        <Tooltip title="Yukarı taşı">
+                          <span>
+                            <IconButton size="small" onClick={() => move(index, -1)}
+                              disabled={index === 0 || reorderMut.isPending}>
+                              <ArrowUpwardIcon fontSize="small" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                        <Tooltip title="Aşağı taşı">
+                          <span>
+                            <IconButton size="small" onClick={() => move(index, 1)}
+                              disabled={index === promos.length - 1 || reorderMut.isPending}>
+                              <ArrowDownwardIcon fontSize="small" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
                         <Tooltip title="Düzenle">
                           <IconButton size="small" onClick={() => navigate(`/promotions/${promo._id}/edit`)}>
                             <EditIcon fontSize="small" />
