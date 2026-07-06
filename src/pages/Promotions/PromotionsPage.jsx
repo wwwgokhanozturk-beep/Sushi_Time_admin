@@ -132,9 +132,11 @@ export default function PromotionsPage() {
                       </Typography>
                     )}
 
-                    <Typography variant="caption" color="text.secondary">
-                      {fmtDate(promo.validFrom)} → {fmtDate(promo.validTo)}
-                    </Typography>
+                    {(promo.validFrom || promo.validTo) && (
+                      <Typography variant="caption" color="text.secondary">
+                        {fmtDate(promo.validFrom)} → {fmtDate(promo.validTo)}
+                      </Typography>
+                    )}
 
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 'auto', pt: 1 }}>
                       <Switch

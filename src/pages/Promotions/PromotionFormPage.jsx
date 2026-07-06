@@ -74,7 +74,6 @@ export default function PromotionFormPage() {
 
   const validate = () => {
     const errs = {};
-    if (!form.title.trim()) errs.title = 'Başlık (EN) gerekli';
     if (form.discountPercent !== '' && (isNaN(form.discountPercent) || Number(form.discountPercent) < 0 || Number(form.discountPercent) > 100))
       errs.discountPercent = '0–100 arası olmalı';
     setErrors(errs);
@@ -152,7 +151,7 @@ export default function PromotionFormPage() {
                   {langTab === 0 && (
                     <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
                       <TextField fullWidth label="Başlık (EN)" value={form.title}
-                        onChange={set('title')} error={!!errors.title} helperText={errors.title} required />
+                        onChange={set('title')} placeholder="Boş bırakılabilir" />
                       <TextField fullWidth label="Açıklama (EN)" value={form.description}
                         onChange={set('description')} multiline minRows={2} maxRows={4} />
                     </Box>
