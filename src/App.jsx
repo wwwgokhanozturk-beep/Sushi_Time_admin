@@ -8,6 +8,7 @@ import OrdersPage          from '@/pages/Orders/OrdersPage';
 import OrderDetailPage     from '@/pages/Orders/OrderDetailPage';
 import MenuPage            from '@/pages/Menu/MenuPage';
 import MenuItemFormPage    from '@/pages/Menu/MenuItemFormPage';
+import CategoryImagesPage  from '@/pages/Categories/CategoryImagesPage';
 import UsersPage           from '@/pages/Users/UsersPage';
 import AnalyticsPage       from '@/pages/Analytics/AnalyticsPage';
 import PromotionsPage      from '@/pages/Promotions/PromotionsPage';
@@ -36,6 +37,7 @@ export default function App() {
       <Route path="/menu" element={<ProtectedRoute><MenuPage /></ProtectedRoute>} />
       <Route path="/menu/new" element={<ProtectedRoute><MenuItemFormPage /></ProtectedRoute>} />
       <Route path="/menu/:id/edit" element={<ProtectedRoute><MenuItemFormPage /></ProtectedRoute>} />
+      <Route path="/categories" element={<ProtectedRoute><CategoryImagesPage /></ProtectedRoute>} />
       <Route path="/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
       <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
       <Route path="/promotions" element={<ProtectedRoute><PromotionsPage /></ProtectedRoute>} />

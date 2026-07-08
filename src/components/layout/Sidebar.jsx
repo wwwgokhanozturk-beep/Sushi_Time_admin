@@ -13,6 +13,7 @@ import {
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
+import CategoryIcon from "@mui/icons-material/Category";
 import PeopleIcon from "@mui/icons-material/People";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
@@ -27,6 +28,7 @@ const NAV_ITEMS = [
   { label: "Panel", icon: <DashboardIcon />, path: "/" },
   { label: "Siparişler", icon: <ReceiptIcon />, path: "/orders" },
   { label: "Menü", icon: <RestaurantMenuIcon />, path: "/menu" },
+  { label: "Kategori Fotoğrafları", icon: <CategoryIcon />, path: "/categories" },
   { label: "Kampanyalar", icon: <LocalOfferIcon />, path: "/promotions" },
   { label: "Kullanıcılar", icon: <PeopleIcon />, path: "/users" },
   { label: "Analitik", icon: <BarChartIcon />, path: "/analytics" },
