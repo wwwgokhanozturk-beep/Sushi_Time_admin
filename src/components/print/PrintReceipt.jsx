@@ -108,7 +108,7 @@ const s = {
   },
   logo: {
     display: 'block',
-    width: '48mm',
+    width: '66mm',
     margin: '0 auto 2mm',
   },
   box: {
