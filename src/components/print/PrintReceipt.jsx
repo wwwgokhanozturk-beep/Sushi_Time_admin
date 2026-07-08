@@ -108,8 +108,8 @@ const s = {
   },
   logo: {
     display: 'block',
-    width: '66mm',
-    margin: '0 auto 2mm',
+    width: '72mm',
+    margin: '0 auto',
   },
   box: {
     border: '1px solid #000',
