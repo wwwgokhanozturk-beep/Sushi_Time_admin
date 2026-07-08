@@ -16,6 +16,7 @@ import PageLayout     from '@/components/layout/PageLayout';
 import OrderStatusBadge from './components/OrderStatusBadge';
 import { useOrders, useDeleteOrder }  from '@/hooks/useOrders';
 import { usePrintReceipt } from '@/hooks/usePrintReceipt';
+import { useContactSettings } from '@/hooks/useSettings';
 import { formatPrice } from '@/utils/formatters';
 import { STATUS_LABELS } from '@/utils/constants';
 import { buildMapsUrl } from '@/utils/maps';
@@ -27,6 +28,7 @@ const STATUS_TABS = ['all', 'pending', 'confirmed', 'preparing', 'en_route', 'de
 export default function OrdersPage() {
   const navigate   = useNavigate();
   const printReceipt = usePrintReceipt();
+  const { data: contact } = useContactSettings();
   const [tab, setTab]       = useState(0);
   const [search, setSearch] = useState('');
   const [page, setPage]     = useState(0);
@@ -55,7 +57,7 @@ export default function OrdersPage() {
 
   const handlePrint = (e, order) => {
     e.stopPropagation();
-    printReceipt(order);
+    printReceipt(order, contact?.contactNumber);
   };
 
   const exportCSV = () => {

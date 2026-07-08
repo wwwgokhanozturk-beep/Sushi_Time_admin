@@ -1,138 +1,92 @@
 import React, { forwardRef } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
 import dayjs from 'dayjs';
-import { formatPrice } from '@/utils/formatters';
 
 /**
  * PrintReceipt — рендерится ВНУТРИ #receipt-root из index.html.
- * Ширина бумаги: 80 мм (Türkiye POS standardı).
- * КДВ: %10 (yeme-içme hizmetleri, 2023'ten itibaren geçerli).
+ * Kağıt genişliği: 80 mm (Türkiye POS standardı), yükseklik içeriğe göre otomatik.
+ * Bilgilendirme fişi — KDV ayrımı yapılmaz, tek kalem toplam gösterilir.
  */
-const PrintReceipt = forwardRef(function PrintReceipt({ order }, ref) {
+const PrintReceipt = forwardRef(function PrintReceipt({ order, contactNumber }, ref) {
   if (!order) return null;
 
   const shortId   = order._id?.slice(-6).toUpperCase();
-  const orderDate = dayjs(order.createdAt).format('DD.MM.YYYY HH:mm');
+  const orderDate = dayjs(order.createdAt).format('DD.MM.YYYY');
+  const orderTime = dayjs(order.createdAt).format('HH:mm');
   const total     = parseFloat(order.totalPrice) || 0;
-  // Türkiye yeme-içme KDV oranı: %10
-  const kdvRate   = 0.10;
-  const araTotal  = parseFloat((total / (1 + kdvRate)).toFixed(2));
-  const kdv       = parseFloat((total - araTotal).toFixed(2));
-  const qrData    = JSON.stringify({ id: order._id, no: shortId, tutar: total, tarih: orderDate });
+  const money     = (n) => parseFloat(n || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const paymentLbl = order.paymentMethod === 'card' ? 'Kredi Kartı (kapıda)' : 'Nakit (kapıda)';
+
+  const address = [
+    order.address,
+    order.buildingName && `Bina: ${order.buildingName}`,
+    order.floor && `Kat: ${order.floor}`,
+    order.apartment && `Daire: ${order.apartment}`,
+    order.doorCode && `Kapı kodu: ${order.doorCode}`,
+  ].filter(Boolean).join(', ');
 
   return (
     <div id="receipt-print-area" ref={ref} style={s.area}>
 
-      {/* ── Başlık ── */}
-      <div style={s.center}>
-        <div style={{ fontWeight: 'bold', fontSize: 14, marginBottom: 2 }}>🍣 Sushi Time</div>
-        <div style={{ fontSize: 10 }}>Restoran Yönetim Sistemi</div>
-      </div>
+      {/* ── Logo ── */}
+      {/* logo-receipt.png — logo.png ile aynı görsel, arka planındaki
+          (saydamlık yerine pikselleşmiş) gri dama deseni temizlenmiş hâli. */}
+      <img src="/logo-receipt.png" alt="Sushi Time" style={s.logo} />
 
-      <div style={s.dashed} />
-
-      {/* ── QR Kod ── */}
-      <div style={s.center}>
-        <QRCodeSVG value={qrData} size={90} bgColor="#fff" fgColor="#000" />
-      </div>
-
-      <div style={s.dashed} />
-
-      {/* ── Sipariş No & Tarih ── */}
-      <div style={s.row}>
-        <span>Sipariş No</span>
-        <strong style={{ fontSize: 13 }}>#{shortId}</strong>
-      </div>
-      <div style={s.row}>
-        <span>Tarih</span>
-        <span>{orderDate}</span>
-      </div>
-
-      <div style={s.dashed} />
-
-      {/* ── Müşteri ── */}
-      <div style={s.sectionTitle}>MÜŞTERİ BİLGİLERİ</div>
-      <div style={s.row}>
-        <span style={s.label}>Ad Soyad</span>
-        <span style={s.val}>{order.customerName || '—'}</span>
-      </div>
-      <div style={s.row}>
-        <span style={s.label}>Telefon</span>
-        <span style={s.val}>{order.phone || '—'}</span>
-      </div>
-      {order.address && (
-        <div style={{ fontSize: 10, marginTop: 3, wordBreak: 'break-word' }}>
-          <span style={s.label}>Adres: </span>{order.address}
+      {/* ── Bilgi tablosu ── */}
+      <div style={s.box}>
+        <div style={s.row}>Sushi Time Contact Number : {contactNumber || '—'}</div>
+        <div style={{ ...s.row, ...s.kv }}>
+          <span>Müşteri:</span>
+          <strong>{order.customerName || '—'}</strong>
         </div>
-      )}
-      {order.notes && (
-        <div style={{ fontSize: 10, marginTop: 2, wordBreak: 'break-word' }}>
-          <span style={s.label}>Not: </span>{order.notes}
+        <div style={{ ...s.row, ...s.kv }}>
+          <span>Telefon:</span>
+          <strong>{order.phone || '—'}</strong>
         </div>
-      )}
-
-      <div style={s.dashed} />
-
-      {/* ── Ürünler ── */}
-      <div style={s.sectionTitle}>ÜRÜNLER</div>
-      <div style={{ display: 'flex', fontWeight: 'bold', fontSize: 10, borderBottom: '1px solid #000', paddingBottom: 3, marginBottom: 3 }}>
-        <span style={{ width: 28 }}>Adet</span>
-        <span style={{ flex: 1 }}>Ürün</span>
-        <span style={{ width: 60, textAlign: 'right' }}>Tutar</span>
-      </div>
-      {order.items?.map((item, i) => (
-        <div key={i} style={{ display: 'flex', fontSize: 11, marginBottom: 2 }}>
-          <span style={{ width: 28, textAlign: 'center' }}>{item.quantity}×</span>
-          <span style={{ flex: 1, paddingRight: 4 }}>{item.name}</span>
-          <span style={{ width: 60, textAlign: 'right' }}>
-            {formatPrice(item.subtotal ?? item.price * item.quantity)}
-          </span>
+        <div style={s.blackRow}>SİPARİŞ ADRESİ</div>
+        <div style={s.row}>{address || '—'}</div>
+        <div style={{ ...s.row, ...s.kv }}>
+          <span>Ödeme:</span>
+          <strong>{paymentLbl}</strong>
         </div>
-      ))}
-
-      <div style={s.dashed} />
-
-      {/* ── Ara Toplam & KDV ── */}
-      <div style={s.row}>
-        <span style={s.label}>Ara Toplam (KDV Hariç)</span>
-        <span style={s.val}>{formatPrice(araTotal)}</span>
-      </div>
-      <div style={s.row}>
-        <span style={s.label}>KDV (%10)</span>
-        <span style={s.val}>{formatPrice(kdv)}</span>
+        <div style={{ ...s.row, ...s.kv }}>
+          <span>Sipariş No:</span>
+          <strong>{shortId}</strong>
+        </div>
+        <div style={{ ...s.row, ...s.kv }}>
+          <span>Sipariş Zamanı:</span>
+          <strong>{orderDate} - {orderTime}</strong>
+        </div>
       </div>
 
-      <div style={s.double} />
-
-      {/* ── ÖDENECEK TUTAR ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '4px 0' }}>
-        <strong style={{ fontSize: 12 }}>ÖDENECEK TUTAR</strong>
-        <strong style={{ fontSize: 15 }}>{formatPrice(total)}</strong>
+      {/* ── Ürünler tablosu ── */}
+      <div style={{ ...s.box, marginTop: '2mm' }}>
+        <div style={{ ...s.blackRow, ...s.itemRow, textAlign: 'left' }}>
+          <span style={s.itemName}>ÜRÜN ADI</span>
+          <span style={s.itemQty}>MİKTAR</span>
+          <span style={s.itemPrice}>FİYAT</span>
+        </div>
+        {order.items?.map((item, i) => (
+          <div key={i}
+            style={{
+              ...s.itemRow,
+              borderBottom: i === order.items.length - 1 ? 'none' : '1px dashed #000',
+            }}>
+            <span style={s.itemName}>{item.name?.toUpperCase()}</span>
+            <span style={s.itemQty}>x {item.quantity}</span>
+            <span style={s.itemPrice}>{money(item.subtotal ?? item.price * item.quantity)}</span>
+          </div>
+        ))}
       </div>
 
-      <div style={s.double} />
-
-      {/* ── Ödeme & Durum ── */}
-      <div style={s.row}>
-        <span style={s.label}>Ödeme</span>
-        <span style={s.val}>
-          {order.paymentMethod === 'card' ? 'Kredi Kartı' : 'Kapıda Nakit'}
-        </span>
+      {/* ── Genel toplam ── */}
+      <div style={{ ...s.blackRow, ...s.totalRow }}>
+        <span>GENEL TOPLAM :</span>
+        <span>{money(total)} TL</span>
       </div>
-      <div style={s.row}>
-        <span style={s.label}>Durum</span>
-        <span style={s.val}>{order.status?.toUpperCase() || '—'}</span>
-      </div>
-
-      <div style={s.dashed} />
 
       {/* ── Footer ── */}
-      <div style={{ ...s.center, fontSize: 10, marginTop: 6 }}>
-        <div>{orderDate}</div>
-        <div style={{ fontWeight: 'bold', marginTop: 4 }}>Siparişiniz için teşekkür ederiz!</div>
-        <div style={{ marginTop: 2 }}>sushitime.com</div>
-        <div style={{ marginTop: 6, letterSpacing: 4 }}>* * *</div>
-      </div>
+      <div style={s.footer}>MALİ DEĞERİ YOKTUR. BİLGİ AMAÇLIDIR.</div>
 
     </div>
   );
@@ -143,45 +97,75 @@ export default PrintReceipt;
 const s = {
   area: {
     fontFamily: 'Arial, Helvetica, sans-serif',
-    fontSize: 11,
+    fontSize: 10.5,
     color: '#000',
     background: '#fff',
-    width: '72mm',          // 80mm − 4mm отступ с каждой стороны
-    padding: '4mm',
+    width: '80mm',
+    padding: '2mm',
     margin: 0,
     boxSizing: 'border-box',
-    lineHeight: 1.45,
+    lineHeight: 1.3,
   },
-  center: {
-    textAlign: 'center',
-    margin: '5px 0',
+  logo: {
+    display: 'block',
+    width: '48mm',
+    margin: '0 auto 2mm',
   },
-  sectionTitle: {
-    fontWeight: 'bold',
-    fontSize: 10,
-    letterSpacing: 0.8,
-    margin: '3px 0 4px',
+  box: {
+    border: '1px solid #000',
+    borderBottom: 'none',
   },
   row: {
+    padding: '1mm 1.5mm',
+    borderBottom: '1px solid #000',
+    wordBreak: 'break-word',
+  },
+  kv: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    fontSize: 11,
-    marginBottom: 3,
+    gap: '2mm',
   },
-  label: {
-    color: '#444',
+  blackRow: {
+    background: '#000',
+    color: '#fff',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    padding: '1mm 1.5mm',
+    borderBottom: '1px solid #000',
+    letterSpacing: 0.3,
   },
-  val: {
+  itemRow: {
+    display: 'flex',
+    padding: '1mm 1.5mm',
+    borderBottom: '1px solid #000',
+  },
+  itemName: {
+    flex: 1,
+    paddingRight: '1.5mm',
+    wordBreak: 'break-word',
+  },
+  itemQty: {
+    width: '14mm',
+    textAlign: 'center',
+    flexShrink: 0,
+  },
+  itemPrice: {
+    width: '16mm',
     textAlign: 'right',
-    maxWidth: '55%',
+    flexShrink: 0,
   },
-  dashed: {
-    borderTop: '1px dashed #000',
-    margin: '5px 0',
+  totalRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    fontSize: 13,
+    padding: '1.5mm',
+    marginTop: '2mm',
+    border: '1px solid #000',
   },
-  double: {
-    borderTop: '3px double #000',
-    margin: '5px 0',
+  footer: {
+    textAlign: 'center',
+    fontSize: 8.5,
+    fontWeight: 'bold',
+    marginTop: '2mm',
   },
 };

@@ -20,6 +20,8 @@
     background: #fff !important;
     width: 80mm !important;
     height: auto !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   /* Скрываем всё приложение */
@@ -40,10 +42,10 @@
 
   #receipt-print-area {
     display: block !important;
-    width: 72mm !important;   /* 80mm − 4mm отступ с каждой стороны */
+    width: 80mm !important;   /* box-sizing: border-box — padding уже внутри */
     height: auto !important;
     margin: 0 !important;
-    padding: 4mm !important;
+    padding: 2mm !important;
     box-shadow: none !important;
     background: #fff !important;
     box-sizing: border-box !important;
@@ -51,17 +53,19 @@
     break-inside: avoid;
   }
 
+  /* Печатаем фон/цвет элементов как задано инлайн-стилями (чёрные плашки
+     заголовков) — без принудительного transparent/#000, который их гасил. */
   #receipt-root *,
   #receipt-print-area * {
     visibility: visible !important;
-    color: #000 !important;
-    background: transparent !important;
     box-shadow: none !important;
     page-break-inside: avoid;
     break-inside: avoid;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
-  #receipt-print-area svg {
+  #receipt-print-area img {
     display: block !important;
     margin: 0 auto !important;
   }

@@ -21,11 +21,11 @@ function getRoot() {
 }
 
 export function usePrintReceipt() {
-  return useCallback((order) => {
+  return useCallback((order, contactNumber) => {
     const root = getRoot();
     if (!root) return;
 
-    root.render(React.createElement(PrintReceipt, { order }));
+    root.render(React.createElement(PrintReceipt, { order, contactNumber }));
 
     // Ждём рендер React, затем открываем диалог печати
     setTimeout(() => {

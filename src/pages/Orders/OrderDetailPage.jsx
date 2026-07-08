@@ -13,6 +13,7 @@ import PageLayout    from '@/components/layout/PageLayout';
 import OrderStatusBadge from './components/OrderStatusBadge';
 import { useOrder, useUpdateOrderStatus, useCancelOrder } from '@/hooks/useOrders';
 import { usePrintReceipt } from '@/hooks/usePrintReceipt';
+import { useContactSettings } from '@/hooks/useSettings';
 import { formatPrice } from '@/utils/formatters';
 import { ORDER_STATUSES, STATUS_LABELS, STATUS_COLORS } from '@/utils/constants';
 import { buildMapsUrl, isGpsPin } from '@/utils/maps';
@@ -34,6 +35,7 @@ export default function OrderDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const printReceipt = usePrintReceipt();
+  const { data: contact } = useContactSettings();
 
   const { data: order, isLoading, isError } = useOrder(id);
   const updateStatus = useUpdateOrderStatus();
@@ -97,7 +99,7 @@ export default function OrderDetailPage() {
           <Chip label="🎉 Sadakat indirimi" color="success" size="small" variant="outlined" />
         )}
         <Box sx={{ flex: 1 }} />
-        <Button startIcon={<PrintIcon />} variant="outlined" size="small" onClick={() => printReceipt(order)}>
+        <Button startIcon={<PrintIcon />} variant="outlined" size="small" onClick={() => printReceipt(order, contact?.contactNumber)}>
           Fiş yazdır
         </Button>
         {!isCancelled && !isDelivered && (

@@ -20,3 +20,12 @@ export function useUpdateCategoryOrder() {
     onError: (err) => toast.error(err.response?.data?.message || 'Save failed'),
   });
 }
+
+// Contact number shown on the printed receipt (same source as the site's WhatsApp/phone button).
+export function useContactSettings() {
+  return useQuery({
+    queryKey: ['settings', 'contact'],
+    queryFn:  () => settingsService.getContact().then((r) => r.data.data.settings),
+    staleTime: 5 * 60 * 1000,
+  });
+}
