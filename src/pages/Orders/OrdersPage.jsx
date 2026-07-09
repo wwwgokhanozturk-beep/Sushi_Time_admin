@@ -22,6 +22,7 @@ import { STATUS_LABELS } from '@/utils/constants';
 import { buildMapsUrl } from '@/utils/maps';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
+import * as XLSX from 'xlsx';
 
 const STATUS_TABS = ['all', 'pending', 'confirmed', 'preparing', 'en_route', 'delivered', 'cancelled'];
 
@@ -31,6 +32,8 @@ export default function OrdersPage() {
   const { data: contact } = useContactSettings();
   const [tab, setTab]       = useState(0);
   const [search, setSearch] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo]     = useState('');
   const [page, setPage]     = useState(0);
   const [rowsPerPage]       = useState(10);
   const [toDelete, setToDelete] = useState(null); // order pending delete confirmation
@@ -46,12 +49,24 @@ export default function OrdersPage() {
     statusFilter ? { status: statusFilter } : {}
   );
 
-  const filtered = orders.filter((o) =>
-    !search ||
-    o.customerName?.toLowerCase().includes(search.toLowerCase()) ||
-    o._id?.includes(search) ||
-    o.phone?.includes(search)
-  );
+  const filtered = orders.filter((o) => {
+    // Text (name / phone / ID)
+    const matchesSearch = !search ||
+      o.customerName?.toLowerCase().includes(search.toLowerCase()) ||
+      o._id?.includes(search) ||
+      o.phone?.includes(search);
+    if (!matchesSearch) return false;
+    // Date range (inclusive, by order date)
+    if (dateFrom || dateTo) {
+      const d = dayjs(o.createdAt);
+      if (dateFrom && d.isBefore(dayjs(dateFrom).startOf('day'))) return false;
+      if (dateTo && d.isAfter(dayjs(dateTo).endOf('day'))) return false;
+    }
+    return true;
+  });
+
+  const hasFilter = !!(search || dateFrom || dateTo);
+  const clearFilters = () => { setSearch(''); setDateFrom(''); setDateTo(''); setPage(0); };
 
   const paginated = filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
@@ -60,27 +75,34 @@ export default function OrdersPage() {
     printReceipt(order, contact?.contactNumber);
   };
 
-  const exportCSV = () => {
-    const headers = ['Order ID', 'Customer', 'Phone', 'Items', 'Total (TRY)', 'Status', 'Payment', 'Date'];
-    const rows = filtered.map((o) => [
-      `#${o._id?.slice(-6).toUpperCase()}`,
-      o.customerName || '',
-      o.phone || '',
-      o.items?.length ?? 0,
-      o.totalPrice ?? 0,
-      o.status || '',
-      o.paymentMethod || 'cash',
-      dayjs(o.createdAt).format('YYYY-MM-DD HH:mm'),
-    ]);
-    const escape = (v) => `"${String(v).replace(/"/g, '""')}"`;
-    const csv = [headers, ...rows].map((r) => r.map(escape).join(',')).join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `orders-${dayjs().format('YYYY-MM-DD')}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  // Export the filtered rows to a neatly-formatted .xlsx. When the filter
+  // yields nothing (or no filter is set), export everything currently loaded.
+  const exportExcel = () => {
+    const data = filtered.length ? filtered : orders;
+    const rows = data.map((o) => ({
+      'Sipari\u015F No':  `#${o._id?.slice(-6).toUpperCase()}`,
+      'M\u00FC\u015Fteri':     o.customerName || '',
+      'Telefon':     o.phone || '',
+      '\u00DCr\u00FCn Say\u0131s\u0131': o.items?.length ?? 0,
+      'Toplam (\u20BA)':  Number(o.totalPrice ?? 0),
+      'Durum':       STATUS_LABELS[o.status] || o.status || '',
+      '\u00D6deme':       o.paymentMethod === 'card' ? 'Kart' : 'Nakit',
+      'Adres':       o.address || '',
+      'Tarih':       dayjs(o.createdAt).format('DD.MM.YYYY HH:mm'),
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    // Column widths so everything lines up cleanly.
+    ws['!cols'] = [
+      { wch: 12 }, { wch: 24 }, { wch: 16 }, { wch: 11 }, { wch: 12 },
+      { wch: 15 }, { wch: 8 },  { wch: 36 }, { wch: 18 },
+    ];
+    // Freeze the header row.
+    ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Sipari\u015Fler');
+    XLSX.writeFile(wb, `siparisler-${dayjs().format('YYYY-MM-DD_HHmm')}.xlsx`);
   };
 
   return (
@@ -99,14 +121,36 @@ export default function OrdersPage() {
           ))}
         </Tabs>
 
-        {/* ── Search + refresh ── */}
-        <Box sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
+        {/* ── Filters (name / date range) + export ── */}
+        <Box sx={{ p: 2, display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap' }}>
           <TextField
             size="small" placeholder="İsim, telefon, ID ile ara…" value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
             InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
-            sx={{ maxWidth: 320, flex: 1 }}
+            sx={{ minWidth: 220, flex: '1 1 220px' }}
           />
+          <TextField
+            size="small" type="date" label="Başlangıç" value={dateFrom}
+            onChange={(e) => { setDateFrom(e.target.value); setPage(0); }}
+            InputLabelProps={{ shrink: true }}
+            inputProps={{ max: dateTo || undefined }}
+            sx={{ width: 165 }}
+          />
+          <TextField
+            size="small" type="date" label="Bitiş" value={dateTo}
+            onChange={(e) => { setDateTo(e.target.value); setPage(0); }}
+            InputLabelProps={{ shrink: true }}
+            inputProps={{ min: dateFrom || undefined }}
+            sx={{ width: 165 }}
+          />
+          {hasFilter && (
+            <Button size="small" color="inherit" onClick={clearFilters}>
+              Temizle
+            </Button>
+          )}
+
+          <Box sx={{ flex: 1 }} />
+
           <Tooltip title="Yenile">
             <span>
               <IconButton onClick={() => refetch()} disabled={isFetching}>
@@ -114,16 +158,16 @@ export default function OrdersPage() {
               </IconButton>
             </span>
           </Tooltip>
-          <Tooltip title="Filtrelenen siparişleri CSV'ye aktar">
+          <Tooltip title={hasFilter ? 'Filtrelenen siparişleri Excel’e aktar' : 'Tüm siparişleri Excel’e aktar'}>
             <span>
               <Button
                 startIcon={<DownloadIcon />}
-                onClick={exportCSV}
-                disabled={filtered.length === 0}
+                onClick={exportExcel}
+                disabled={orders.length === 0}
                 size="small"
                 variant="outlined"
               >
-                CSV'ye Aktar
+                Excel'e Aktar
               </Button>
             </span>
           </Tooltip>
