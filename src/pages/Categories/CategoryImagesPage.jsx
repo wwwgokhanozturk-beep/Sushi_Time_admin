@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Box, Card, CardContent, Grid, Typography, TextField, Button, IconButton,
-  CircularProgress, Alert, InputAdornment,
+  CircularProgress, Alert, InputAdornment, Divider,
 } from '@mui/material';
 import SaveIcon    from '@mui/icons-material/Save';
 import UploadIcon  from '@mui/icons-material/Upload';
@@ -23,36 +23,47 @@ const EMOJI = {
 const emoji = (c) => EMOJI[c] || '🍽️';
 const pretty = (c) => (c || '').replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
 
-const BLANK = { imageUrl: '', scale: 1, offsetX: 0, offsetY: 0 };
+const BLANK_IMG = { imageUrl: '', scale: 1, offsetX: 0, offsetY: 0 };
+const BLANK_NAME = { en: '', ru: '', tr: '' };
 
 export default function CategoryImagesPage() {
-  const [cats, setCats]   = useState([]);
-  const [images, setImages] = useState({});   // { [cat]: { imageUrl, scale, offsetX, offsetY } }
+  const [cats, setCats]     = useState([]);
+  const [images, setImages] = useState({}); // { [cat]: { imageUrl, scale, offsetX, offsetY } }
+  const [names, setNames]   = useState({}); // { [cat]: { en, ru, tr } }
   const [loading, setLoading] = useState(true);
   const [saving, setSaving]   = useState(false);
   const [uploadingCat, setUploadingCat] = useState(null);
-  const fileCatRef = useRef(null);            // which category the hidden input targets
+  const fileCatRef = useRef(null);
   const fileRef = useRef(null);
 
   useEffect(() => {
     let active = true;
-    Promise.all([menuService.categories(), settingsService.getCategoryImages()])
-      .then(([cRes, iRes]) => {
+    Promise.all([
+      menuService.categories(),
+      settingsService.getCategoryImages(),
+      settingsService.getCategoryNames(),
+    ])
+      .then(([cRes, iRes, nRes]) => {
         if (!active) return;
         const menuCats = cRes.data?.data?.categories || [];
         const list = (menuCats.length ? menuCats : MENU_CATEGORIES).map((c) => c.toLowerCase());
         setCats([...new Set(list)]);
         setImages(iRes.data?.data?.categoryImages || {});
+        setNames(nRes.data?.data?.categoryNames || {});
       })
       .catch(() => toast.error('Kategoriler yüklenemedi'))
       .finally(() => active && setLoading(false));
     return () => { active = false; };
   }, []);
 
-  const entry = (cat) => images[cat] || BLANK;
+  const imgOf  = (cat) => images[cat] || BLANK_IMG;
+  const nameOf = (cat) => names[cat] || BLANK_NAME;
 
-  const patch = (cat, p) =>
-    setImages((prev) => ({ ...prev, [cat]: { ...BLANK, ...prev[cat], ...p } }));
+  const patchImg = (cat, p) =>
+    setImages((prev) => ({ ...prev, [cat]: { ...BLANK_IMG, ...prev[cat], ...p } }));
+
+  const patchName = (cat, lang, val) =>
+    setNames((prev) => ({ ...prev, [cat]: { ...BLANK_NAME, ...prev[cat], [lang]: val } }));
 
   const removeImage = (cat) =>
     setImages((prev) => {
@@ -76,7 +87,7 @@ export default function CategoryImagesPage() {
       const { data } = await menuService.uploadImage(file);
       const url = data?.data?.url || data?.url;
       if (url) {
-        patch(cat, { imageUrl: url });
+        patchImg(cat, { imageUrl: url });
         toast.success('Fotoğraf yüklendi');
       }
     } catch {
@@ -89,13 +100,24 @@ export default function CategoryImagesPage() {
   const save = async () => {
     setSaving(true);
     try {
-      // Keep only categories that actually have an image.
-      const payload = {};
+      const imgPayload = {};
       for (const [cat, v] of Object.entries(images)) {
-        if (v?.imageUrl?.trim()) payload[cat] = v;
+        if (v?.imageUrl?.trim()) imgPayload[cat] = v;
       }
-      const { data } = await settingsService.updateCategoryImages(payload);
-      setImages(data?.data?.categoryImages || payload);
+      const namePayload = {};
+      for (const [cat, v] of Object.entries(names)) {
+        const entry = {};
+        for (const lang of ['en', 'ru', 'tr']) {
+          if (v?.[lang]?.trim()) entry[lang] = v[lang].trim();
+        }
+        if (Object.keys(entry).length) namePayload[cat] = entry;
+      }
+      const [iRes, nRes] = await Promise.all([
+        settingsService.updateCategoryImages(imgPayload),
+        settingsService.updateCategoryNames(namePayload),
+      ]);
+      setImages(iRes.data?.data?.categoryImages || imgPayload);
+      setNames(nRes.data?.data?.categoryNames || namePayload);
       toast.success('Kaydedildi');
     } catch (e) {
       toast.error(e.response?.data?.message || 'Kaydetme hatası');
@@ -111,14 +133,14 @@ export default function CategoryImagesPage() {
 
   if (loading) {
     return (
-      <PageLayout title="Kategori Fotoğrafları">
+      <PageLayout title="Kategoriler">
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}><CircularProgress /></Box>
       </PageLayout>
     );
   }
 
   return (
-    <PageLayout title="Kategori Fotoğrafları">
+    <PageLayout title="Kategoriler">
       {/* Hidden shared file input */}
       <input
         ref={fileRef}
@@ -129,9 +151,9 @@ export default function CategoryImagesPage() {
       />
 
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 1 }}>
-        <Typography variant="body2" color="text.secondary">
-          Müşteri menüsündeki kategori butonlarında görünen fotoğraflar. Fotoğraf
-          eklemezseniz varsayılan simge gösterilir. Sürükleyerek konumlandırın, kaydırıcıyla yakınlaştırın.
+        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 640 }}>
+          Kategori adını 3 dilde girin ve müşteri menüsündeki kategori butonunda görünen
+          fotoğrafı ekleyin. Ad boşsa varsayılan çeviri, fotoğraf boşsa varsayılan simge kullanılır.
         </Typography>
         <Button
           variant="contained"
@@ -140,21 +162,24 @@ export default function CategoryImagesPage() {
           disabled={saving}
           sx={{ flexShrink: 0 }}
         >
-          Kaydet ({filledCount})
+          Kaydet
         </Button>
       </Box>
 
       <Grid container spacing={2}>
         {cats.map((cat) => {
-          const e = entry(cat);
-          const hasImg = !!e.imageUrl;
+          const img = imgOf(cat);
+          const nm  = nameOf(cat);
+          const hasImg = !!img.imageUrl;
           return (
             <Grid item xs={12} md={6} key={cat}>
               <Card sx={{ height: '100%' }}>
                 <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Typography sx={{ fontSize: 22 }}>{emoji(cat)}</Typography>
-                    <Typography variant="h6" fontWeight={700} sx={{ flex: 1 }}>{pretty(cat)}</Typography>
+                    <Typography variant="subtitle2" color="text.secondary" sx={{ flex: 1, fontFamily: 'monospace' }}>
+                      {pretty(cat)}
+                    </Typography>
                     {hasImg && (
                       <IconButton size="small" color="error" onClick={() => removeImage(cat)} title="Fotoğrafı kaldır">
                         <DeleteIcon fontSize="small" />
@@ -162,18 +187,31 @@ export default function CategoryImagesPage() {
                     )}
                   </Box>
 
+                  {/* İsim — 3 dil */}
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    <TextField size="small" label="Ad (EN)" value={nm.en}
+                      onChange={(e) => patchName(cat, 'en', e.target.value)} sx={{ flex: '1 1 30%', minWidth: 120 }} />
+                    <TextField size="small" label="Ad (RU)" value={nm.ru}
+                      onChange={(e) => patchName(cat, 'ru', e.target.value)} sx={{ flex: '1 1 30%', minWidth: 120 }} />
+                    <TextField size="small" label="Ad (TR)" value={nm.tr}
+                      onChange={(e) => patchName(cat, 'tr', e.target.value)} sx={{ flex: '1 1 30%', minWidth: 120 }} />
+                  </Box>
+
+                  <Divider />
+
+                  {/* Fotoğraf */}
                   <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                     <TextField
                       fullWidth
                       size="small"
                       label="Fotoğraf URL'si"
-                      value={e.imageUrl}
-                      onChange={(ev) => patch(cat, { imageUrl: ev.target.value })}
+                      value={img.imageUrl}
+                      onChange={(ev) => patchImg(cat, { imageUrl: ev.target.value })}
                       placeholder="https://ornek.com/foto.jpg"
                       InputProps={{
-                        endAdornment: e.imageUrl ? (
+                        endAdornment: img.imageUrl ? (
                           <InputAdornment position="end">
-                            <IconButton size="small" onClick={() => patch(cat, { imageUrl: '' })}>
+                            <IconButton size="small" onClick={() => patchImg(cat, { imageUrl: '' })}>
                               <span style={{ fontSize: 16, lineHeight: 1 }}>×</span>
                             </IconButton>
                           </InputAdornment>
@@ -193,11 +231,11 @@ export default function CategoryImagesPage() {
 
                   {hasImg ? (
                     <ImageFrameEditor
-                      imageUrl={e.imageUrl}
-                      scale={Number(e.scale) || 1}
-                      offsetX={Number(e.offsetX) || 0}
-                      offsetY={Number(e.offsetY) || 0}
-                      onChange={({ scale, offsetX, offsetY }) => patch(cat, { scale, offsetX, offsetY })}
+                      imageUrl={img.imageUrl}
+                      scale={Number(img.scale) || 1}
+                      offsetX={Number(img.offsetX) || 0}
+                      offsetY={Number(img.offsetY) || 0}
+                      onChange={({ scale, offsetX, offsetY }) => patchImg(cat, { scale, offsetX, offsetY })}
                     />
                   ) : (
                     <Alert severity="info" sx={{ py: 0.5 }}>
@@ -211,7 +249,7 @@ export default function CategoryImagesPage() {
         })}
       </Grid>
 
-      <Box sx={{ mt: 3 }}>
+      <Box sx={{ mt: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
         <Button
           variant="contained"
           size="large"
@@ -221,6 +259,9 @@ export default function CategoryImagesPage() {
         >
           Kaydet
         </Button>
+        <Typography variant="caption" color="text.secondary">
+          {filledCount} kategoride fotoğraf var
+        </Typography>
       </Box>
     </PageLayout>
   );

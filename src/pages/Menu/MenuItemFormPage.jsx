@@ -18,7 +18,7 @@ import toast from 'react-hot-toast';
 const MAX_IMAGES = 3;
 
 const EMPTY = {
-  name: '', category: 'rolls', price: '',
+  name: '', name_ru: '', name_tr: '', category: 'rolls', price: '',
   images: [], imageUrl: '', imageScale: 1, imageOffsetX: 0, imageOffsetY: 0,
   preparationTime: '15', calories: '0', isAvailable: true,
   stock: '',   // '' = unlimited (null); number = tracked quantity
@@ -80,6 +80,8 @@ export default function MenuItemFormPage() {
     if (existing) {
       setForm({
         name: existing.name || '',
+        name_ru: existing.name_ru || '',
+        name_tr: existing.name_tr || '',
         description:    existing.description    || '',
         description_ru: existing.description_ru || '',
         description_tr: existing.description_tr || '',
@@ -125,6 +127,8 @@ export default function MenuItemFormPage() {
 
     const payload = {
       name: form.name.trim(),
+      name_ru: form.name_ru.trim(),
+      name_tr: form.name_tr.trim(),
       description:    form.description.trim(),
       description_ru: form.description_ru.trim(),
       description_tr: form.description_tr.trim(),
@@ -169,8 +173,8 @@ export default function MenuItemFormPage() {
             <Grid container spacing={2.5}>
               {/* Name */}
               <Grid item xs={12}>
-                <TextField fullWidth label="Ürün Adı" value={form.name}
-                  onChange={set('name')} error={!!errors.name} helperText={errors.name} />
+                <TextField fullWidth label="Ürün Adı (EN)" value={form.name}
+                  onChange={set('name')} error={!!errors.name} helperText={errors.name || 'RU / TR adları aşağıdaki dil sekmelerinde'} />
               </Grid>
 
               {/* Category + Price */}
@@ -219,6 +223,8 @@ export default function MenuItemFormPage() {
                   {/* RU */}
                   {langTab === 1 && (
                     <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <TextField fullWidth label="Ürün Adı (RU)" value={form.name_ru}
+                        onChange={set('name_ru')} placeholder="Например: Филадельфия" />
                       <TextField fullWidth label="Açıklama (RU)" value={form.description_ru}
                         onChange={set('description_ru')} multiline minRows={2} maxRows={4} />
                       <TextField fullWidth label="Malzemeler (RU) — virgülle ayrılmış" value={form.ingredients_ru}
@@ -228,6 +234,8 @@ export default function MenuItemFormPage() {
                   {/* TR */}
                   {langTab === 2 && (
                     <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <TextField fullWidth label="Ürün Adı (TR)" value={form.name_tr}
+                        onChange={set('name_tr')} placeholder="Örn: Filadelfiya" />
                       <TextField fullWidth label="Açıklama (TR)" value={form.description_tr}
                         onChange={set('description_tr')} multiline minRows={2} maxRows={4} />
                       <TextField fullWidth label="Malzemeler (TR) — virgülle ayrılmış" value={form.ingredients_tr}

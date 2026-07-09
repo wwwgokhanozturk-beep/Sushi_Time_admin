@@ -28,7 +28,7 @@ const NAV_ITEMS = [
   { label: "Panel", icon: <DashboardIcon />, path: "/" },
   { label: "Siparişler", icon: <ReceiptIcon />, path: "/orders" },
   { label: "Menü", icon: <RestaurantMenuIcon />, path: "/menu" },
-  { label: "Kategori Fotoğrafları", icon: <CategoryIcon />, path: "/categories" },
+  { label: "Kategoriler", icon: <CategoryIcon />, path: "/categories" },
   { label: "Kampanyalar", icon: <LocalOfferIcon />, path: "/promotions" },
   { label: "Kullanıcılar", icon: <PeopleIcon />, path: "/users" },
   { label: "Analitik", icon: <BarChartIcon />, path: "/analytics" },
