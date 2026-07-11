@@ -44,7 +44,7 @@ const PrintReceipt = forwardRef(function PrintReceipt({ order, contactNumber }, 
           <strong>{order.phone || '—'}</strong>
         </div>
         <div style={s.blackRow}>SİPARİŞ ADRESİ</div>
-        <div style={s.row}>{address || '—'}</div>
+        <div style={s.addressRow}>{address || '—'}</div>
         <div style={{ ...s.row, ...s.kv }}>
           <span>Ödeme:</span>
           <strong>{paymentLbl}</strong>
@@ -120,6 +120,15 @@ const s = {
     borderBottom: '1px solid #000',
     wordBreak: 'break-word',
   },
+  // Adres — daha büyük ve kalın (kuryenin kolay okuması için)
+  addressRow: {
+    padding: '1.5mm',
+    borderBottom: '1px solid #000',
+    wordBreak: 'break-word',
+    fontSize: 14,
+    fontWeight: 700,
+    lineHeight: 1.35,
+  },
   kv: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -143,16 +152,21 @@ const s = {
     flex: 1,
     paddingRight: '1.5mm',
     wordBreak: 'break-word',
+    fontSize: 13,
+    fontWeight: 600,
   },
   itemQty: {
-    width: '14mm',
+    width: '15mm',
     textAlign: 'center',
     flexShrink: 0,
+    fontSize: 13,
   },
   itemPrice: {
-    width: '16mm',
+    width: '18mm',
     textAlign: 'right',
     flexShrink: 0,
+    fontSize: 13,
+    fontWeight: 700,
   },
   totalRow: {
     display: 'flex',
