@@ -11,6 +11,7 @@ import SlideshowIcon from '@mui/icons-material/Slideshow';
 import PageLayout from '@/components/layout/PageLayout';
 import { settingsService } from '@/services/settingsService';
 import BusinessHoursCard from './components/BusinessHoursCard';
+import DistrictMinimumsCard from './components/DistrictMinimumsCard';
 
 export default function SettingsPage() {
   // ── İletişim ─────────────────────────────────────────────────────────────
@@ -86,6 +87,9 @@ export default function SettingsPage() {
 
         {/* Çalışma saatleri */}
         <BusinessHoursCard />
+
+        {/* Bölge bazlı minimum sipariş */}
+        <DistrictMinimumsCard />
 
         {/* İletişim */}
         <Card>

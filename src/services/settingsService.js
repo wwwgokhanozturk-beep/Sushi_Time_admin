@@ -13,4 +13,6 @@ export const settingsService = {
   updateSlideshow:     (data)          => api.put('/settings/slideshow', data),
   getBusinessHours:    ()              => api.get('/settings/business-hours'),
   updateBusinessHours: (data)          => api.put('/settings/business-hours', data),
+  getDistrictMinimums:    ()          => api.get('/settings/district-minimums'),
+  updateDistrictMinimums: (minimums)  => api.put('/settings/district-minimums', { minimums }),
 };

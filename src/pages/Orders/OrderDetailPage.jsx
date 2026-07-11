@@ -203,6 +203,7 @@ export default function OrderDetailPage() {
                 <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>Müşteri</Typography>
                 <Row label="Ad" value={order.customerName} />
                 <Row label="Telefon" value={order.phone} />
+                <Row label="Bölge" value={order.district} />
                 <Row label="Adres" value={address} />
                 {mapsUrl && (
                   <Button
