@@ -35,7 +35,7 @@ export default function OrdersPage() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo]     = useState('');
   const [page, setPage]     = useState(0);
-  const [rowsPerPage]       = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(100);
   const [toDelete, setToDelete] = useState(null); // order pending delete confirmation
   const deleteOrder = useDeleteOrder();
 
@@ -45,9 +45,12 @@ export default function OrdersPage() {
   };
 
   const statusFilter = STATUS_TABS[tab] === 'all' ? undefined : STATUS_TABS[tab];
-  const { data: orders = [], isLoading, refetch, isFetching } = useOrders(
-    statusFilter ? { status: statusFilter } : {}
-  );
+  // limit is generous so name/date filtering (client-side, below) works across
+  // the whole recent history, not just the current page's worth of rows.
+  const { data: orders = [], isLoading, refetch, isFetching } = useOrders({
+    limit: 1000,
+    ...(statusFilter ? { status: statusFilter } : {}),
+  });
 
   const filtered = orders.filter((o) => {
     // Text (name / phone / ID)
@@ -254,7 +257,8 @@ export default function OrdersPage() {
         <TablePagination
           component="div" count={filtered.length} page={page}
           onPageChange={(_, p) => setPage(p)} rowsPerPage={rowsPerPage}
-          rowsPerPageOptions={[10]}
+          onRowsPerPageChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(0); }}
+          rowsPerPageOptions={[25, 50, 100, 200]}
         />
       </Card>
 
