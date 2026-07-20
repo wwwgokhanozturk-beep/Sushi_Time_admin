@@ -20,6 +20,7 @@ import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import ChatIcon from "@mui/icons-material/Chat";
 import SettingsIcon from "@mui/icons-material/Settings";
+import QrCode2Icon from "@mui/icons-material/QrCode2";
 import { useNavigate, useLocation } from "react-router-dom";
 import { SIDEBAR_WIDTH } from "@/utils/constants";
 import { useChatNotificationStore } from "@/store/chatNotificationStore";
@@ -34,6 +35,7 @@ const NAV_ITEMS = [
   { label: "Analitik", icon: <BarChartIcon />, path: "/analytics" },
   { label: "Bildirimler", icon: <CampaignIcon />, path: "/notifications" },
   { label: "Sohbet", icon: <ChatIcon />, path: "/chat" },
+  { label: "QR Kod", icon: <QrCode2Icon />, path: "/qr-code" },
   { label: "Ayarlar", icon: <SettingsIcon />, path: "/settings" },
 ];
 
