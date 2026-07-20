@@ -8,6 +8,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import PhoneIcon from '@mui/icons-material/Phone';
 import SlideshowIcon from '@mui/icons-material/Slideshow';
+import TimerIcon from '@mui/icons-material/Timer';
 import PageLayout from '@/components/layout/PageLayout';
 import { settingsService } from '@/services/settingsService';
 import BusinessHoursCard from './components/BusinessHoursCard';
@@ -26,12 +27,21 @@ export default function SettingsPage() {
   const [savingSlide, setSavingSlide] = useState(false);
   const [slideMsg, setSlideMsg] = useState(null);
 
+  // ── Sipariş zamanlayıcısı ────────────────────────────────────────────────
+  const [orderTimerMin, setOrderTimerMin] = useState(40);
+  const [savingTimer, setSavingTimer] = useState(false);
+  const [timerMsg, setTimerMsg] = useState(null);
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
-    Promise.all([settingsService.getContact(), settingsService.getSlideshow()])
-      .then(([cRes, sRes]) => {
+    Promise.all([
+      settingsService.getContact(),
+      settingsService.getSlideshow(),
+      settingsService.getOrderTimer(),
+    ])
+      .then(([cRes, sRes, tRes]) => {
         if (!active) return;
         const c = cRes.data?.data?.settings || {};
         setContactType(c.contactType || 'whatsapp');
@@ -39,6 +49,8 @@ export default function SettingsPage() {
         const s = sRes.data?.data?.settings || {};
         setAutoplay(s.autoplay !== false);
         setIntervalSec(Number(s.intervalSec) > 0 ? Number(s.intervalSec) : 5);
+        const t = tRes.data?.data?.orderTimer || {};
+        setOrderTimerMin(Number(t.minutes) > 0 ? Number(t.minutes) : 40);
       })
       .catch(() => {})
       .finally(() => active && setLoading(false));
@@ -70,6 +82,21 @@ export default function SettingsPage() {
       setSlideMsg({ type: 'error', msg: e.response?.data?.message || 'Kaydetme hatası' });
     } finally {
       setSavingSlide(false);
+    }
+  };
+
+  const saveOrderTimer = async () => {
+    setSavingTimer(true);
+    setTimerMsg(null);
+    try {
+      const min = Math.min(240, Math.max(1, Math.round(Number(orderTimerMin) || 40)));
+      await settingsService.updateOrderTimer(min);
+      setOrderTimerMin(min);
+      setTimerMsg({ type: 'success', msg: 'Kaydedildi' });
+    } catch (e) {
+      setTimerMsg({ type: 'error', msg: e.response?.data?.message || 'Kaydetme hatası' });
+    } finally {
+      setSavingTimer(false);
     }
   };
 
@@ -139,6 +166,44 @@ export default function SettingsPage() {
                 startIcon={savingContact ? <CircularProgress size={18} color="inherit" /> : <SaveIcon />}
                 onClick={saveContact}
                 disabled={savingContact}
+              >
+                Kaydet
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+
+        {/* Sipariş zamanlayıcısı */}
+        <Card>
+          <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+            <Box>
+              <Typography variant="h6" fontWeight={700} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <TimerIcon fontSize="small" /> Sipariş zamanlayıcısı
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Sipariş verildikten sonra takip sayfasında başlayan geri sayımın süresi.
+              </Typography>
+            </Box>
+
+            {timerMsg && <Alert severity={timerMsg.type}>{timerMsg.msg}</Alert>}
+
+            <TextField
+              label="Süre"
+              type="number"
+              value={orderTimerMin}
+              onChange={(e) => setOrderTimerMin(e.target.value)}
+              inputProps={{ min: 1, max: 240 }}
+              InputProps={{ endAdornment: <InputAdornment position="end">dk</InputAdornment> }}
+              helperText="1 ila 240 dakika"
+              sx={{ maxWidth: 220 }}
+            />
+
+            <Box>
+              <Button
+                variant="contained"
+                startIcon={savingTimer ? <CircularProgress size={18} color="inherit" /> : <SaveIcon />}
+                onClick={saveOrderTimer}
+                disabled={savingTimer}
               >
                 Kaydet
               </Button>

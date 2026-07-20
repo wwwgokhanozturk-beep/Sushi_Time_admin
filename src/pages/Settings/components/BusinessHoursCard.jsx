@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box, Card, CardContent, Typography, TextField, Button, Switch,
-  FormControlLabel, CircularProgress, Alert, Chip, Divider, Stack,
+  FormControlLabel, CircularProgress, Alert, Chip, Divider, Stack, Tabs, Tab,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AddIcon from '@mui/icons-material/Add';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import { settingsService } from '@/services/settingsService';
 
 // Дни недели: индекс совпадает с Date.getDay() (0=Pazar). Показываем Pzt→Pzr.
@@ -19,6 +20,21 @@ const DAY_LABELS = {
 const emptyWeek = () =>
   Array.from({ length: 7 }, () => ({ closed: false, open: '10:00', close: '23:00' }));
 
+// Кастомное сообщение «закрыто» на 3 языках (пусто => клиент покажет стандартный текст).
+const LANGS = ['en', 'ru', 'tr'];
+const LANG_TABS = ['🇬🇧 EN', '🇷🇺 RU', '🇹🇷 TR'];
+const emptyMessage = () => ({
+  title: { en: '', ru: '', tr: '' },
+  subtitle: { en: '', ru: '', tr: '' },
+});
+const fillMessage = (m) => {
+  const base = emptyMessage();
+  if (!m) return base;
+  for (const f of ['title', 'subtitle'])
+    for (const l of LANGS) base[f][l] = typeof m[f]?.[l] === 'string' ? m[f][l] : '';
+  return base;
+};
+
 // 'YYYY-MM-DD' -> 'DD.MM.YYYY'
 const fmtDate = (iso) => {
   const [y, m, d] = iso.split('-');
@@ -30,6 +46,8 @@ export default function BusinessHoursCard() {
   const [week, setWeek] = useState(emptyWeek());
   const [holidays, setHolidays] = useState([]);
   const [newHoliday, setNewHoliday] = useState('');
+  const [message, setMessage] = useState(emptyMessage());
+  const [msgLang, setMsgLang] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
@@ -43,6 +61,7 @@ export default function BusinessHoursCard() {
         setEnabled(!!bh.enabled);
         setWeek(Array.isArray(bh.week) && bh.week.length === 7 ? bh.week : emptyWeek());
         setHolidays(Array.isArray(bh.holidays) ? bh.holidays : []);
+        setMessage(fillMessage(bh.message));
       })
       .catch(() => {})
       .finally(() => active && setLoading(false));
@@ -60,11 +79,14 @@ export default function BusinessHoursCard() {
 
   const removeHoliday = (date) => setHolidays((h) => h.filter((d) => d !== date));
 
+  const setMsgField = (field, value) =>
+    setMessage((m) => ({ ...m, [field]: { ...m[field], [LANGS[msgLang]]: value } }));
+
   const save = async () => {
     setSaving(true);
     setMsg(null);
     try {
-      await settingsService.updateBusinessHours({ enabled, week, holidays });
+      await settingsService.updateBusinessHours({ enabled, week, holidays, message });
       setMsg({ type: 'success', msg: 'Kaydedildi' });
     } catch (e) {
       setMsg({ type: 'error', msg: e.response?.data?.message || 'Kaydetme hatası' });

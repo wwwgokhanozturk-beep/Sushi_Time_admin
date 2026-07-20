@@ -15,4 +15,6 @@ export const settingsService = {
   updateBusinessHours: (data)          => api.put('/settings/business-hours', data),
   getDistrictMinimums:    ()          => api.get('/settings/district-minimums'),
   updateDistrictMinimums: (minimums)  => api.put('/settings/district-minimums', { minimums }),
+  getOrderTimer:    ()          => api.get('/settings/order-timer'),
+  updateOrderTimer: (minutes)  => api.put('/settings/order-timer', { minutes }),
 };
