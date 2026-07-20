@@ -4,30 +4,213 @@ import {
   TableContainer, TablePagination, Tabs, Tab, TextField, InputAdornment,
   IconButton, Tooltip, CircularProgress, Typography, Chip, Button,
   Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
+  Collapse, Grid, Divider, Stack,
 } from '@mui/material';
 import SearchIcon     from '@mui/icons-material/Search';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import RefreshIcon    from '@mui/icons-material/Refresh';
 import PrintIcon      from '@mui/icons-material/Print';
 import DownloadIcon   from '@mui/icons-material/Download';
 import DeleteIcon     from '@mui/icons-material/Delete';
 import RoomIcon       from '@mui/icons-material/Room';
+import CancelIcon     from '@mui/icons-material/Cancel';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon   from '@mui/icons-material/KeyboardArrowUp';
 import PageLayout     from '@/components/layout/PageLayout';
 import OrderStatusBadge from './components/OrderStatusBadge';
-import { useOrders, useDeleteOrder }  from '@/hooks/useOrders';
+import { useOrders, useDeleteOrder, useUpdateOrderStatus, useCancelOrder }  from '@/hooks/useOrders';
 import { usePrintReceipt } from '@/hooks/usePrintReceipt';
 import { useContactSettings } from '@/hooks/useSettings';
 import { formatPrice } from '@/utils/formatters';
-import { STATUS_LABELS } from '@/utils/constants';
-import { buildMapsUrl } from '@/utils/maps';
-import { useNavigate } from 'react-router-dom';
+import { ORDER_STATUSES, STATUS_LABELS, STATUS_COLORS } from '@/utils/constants';
+import { buildMapsUrl, isGpsPin } from '@/utils/maps';
 import dayjs from 'dayjs';
 import * as XLSX from 'xlsx';
 
 const STATUS_TABS = ['all', 'pending', 'confirmed', 'preparing', 'en_route', 'delivered', 'cancelled'];
 
+function DetailRow({ label, value, strong, color }) {
+  if (value === undefined || value === null || value === '') return null;
+  return (
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5, gap: 2 }}>
+      <Typography variant="body2" color="text.secondary">{label}</Typography>
+      <Typography variant="body2" sx={{ fontWeight: strong ? 700 : 500, color: color || 'text.primary', textAlign: 'right' }}>
+        {value}
+      </Typography>
+    </Box>
+  );
+}
+
+// Inline expanded panel shown below a clicked order row — same info as the
+// old standalone detail page, without navigating away from the list.
+function OrderExpandedDetails({ order, contact, printReceipt }) {
+  const updateStatus = useUpdateOrderStatus();
+  const cancelOrder  = useCancelOrder();
+  const isCancelled = order.status === 'cancelled';
+  const isDelivered = order.status === 'delivered';
+
+  const address = [
+    order.address,
+    order.buildingName && `Bina: ${order.buildingName}`,
+    order.floor && `Kat: ${order.floor}`,
+    order.apartment && `Daire: ${order.apartment}`,
+    order.doorCode && `Kapı kodu: ${order.doorCode}`,
+  ].filter(Boolean).join(', ');
+
+  const mapsUrl = buildMapsUrl(order);
+
+  const handleCancel = () => {
+    if (window.confirm('Bu siparişi iptal et? Bu işlem geri alınamaz.')) {
+      cancelOrder.mutate(order._id);
+    }
+  };
+
+  return (
+    <Box sx={{ p: 2, bgcolor: '#F9FAFB' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
+        {order.loyaltyDiscountApplied && (
+          <Chip label="🎉 Sadakat indirimi" color="success" size="small" variant="outlined" />
+        )}
+        <Box sx={{ flex: 1 }} />
+        <Button startIcon={<PrintIcon />} variant="outlined" size="small"
+          onClick={(e) => { e.stopPropagation(); printReceipt(order, contact?.contactNumber); }}>
+          Fiş yazdır
+        </Button>
+        {!isCancelled && !isDelivered && (
+          <Button startIcon={<CancelIcon />} variant="outlined" color="error" size="small"
+            onClick={(e) => { e.stopPropagation(); handleCancel(); }} disabled={cancelOrder.isPending}>
+            Siparişi iptal et
+          </Button>
+        )}
+      </Box>
+
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={8}>
+          <Card variant="outlined">
+            <Box sx={{ p: 2 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>Ürünler</Typography>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 700 }}>Ürün</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }} align="center">Adet</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }} align="right">Fiyat</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }} align="right">Ara toplam</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {order.items?.map((item, i) => (
+                    <TableRow key={i}>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell align="center">{item.quantity}×</TableCell>
+                      <TableCell align="right">{formatPrice(item.price)}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 600 }}>
+                        {formatPrice(item.subtotal ?? item.price * item.quantity)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              <Divider sx={{ my: 2 }} />
+
+              <Box sx={{ maxWidth: 320, ml: 'auto' }}>
+                <DetailRow label="Ürünler toplamı" value={order.itemsTotal != null ? formatPrice(order.itemsTotal) : null} />
+                {order.promoDiscount > 0 && (
+                  <DetailRow label={`Promosyon${order.promoCode ? ` (${order.promoCode})` : ''}`}
+                    value={`− ${formatPrice(order.promoDiscount)}`} color="error.main" />
+                )}
+                {order.discountAmount > 0 && (
+                  <DetailRow label="Sadakat indirimi" value={`− ${formatPrice(order.discountAmount)}`} color="success.main" />
+                )}
+                {order.deliveryFee > 0 && <DetailRow label="Teslimat ücreti" value={formatPrice(order.deliveryFee)} />}
+                {order.serviceFee > 0 && <DetailRow label="Hizmet bedeli" value={formatPrice(order.serviceFee)} />}
+                {order.tip > 0 && <DetailRow label="Bahşiş" value={formatPrice(order.tip)} />}
+                <Divider sx={{ my: 1 }} />
+                <DetailRow label="Toplam" value={formatPrice(order.totalPrice)} strong />
+              </Box>
+            </Box>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Stack spacing={2}>
+            <Card variant="outlined">
+              <Box sx={{ p: 2 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5 }}>Durum</Typography>
+                <Stack spacing={1}>
+                  {ORDER_STATUSES.map((s) => {
+                    const active = order.status === s;
+                    return (
+                      <Button
+                        key={s}
+                        fullWidth
+                        size="small"
+                        disableElevation
+                        variant={active ? 'contained' : 'outlined'}
+                        color={STATUS_COLORS[s] || 'primary'}
+                        onClick={(e) => { e.stopPropagation(); !active && updateStatus.mutate({ id: order._id, status: s }); }}
+                        disabled={isCancelled || updateStatus.isPending}
+                        sx={{ justifyContent: 'flex-start', fontWeight: active ? 700 : 500 }}
+                      >
+                        {STATUS_LABELS[s] || s}
+                      </Button>
+                    );
+                  })}
+                </Stack>
+                {updateStatus.isPending && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5 }}>
+                    <CircularProgress size={16} />
+                    <Typography variant="caption" color="text.secondary">Güncelleniyor…</Typography>
+                  </Box>
+                )}
+              </Box>
+            </Card>
+
+            <Card variant="outlined">
+              <Box sx={{ p: 2 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>Müşteri</Typography>
+                <DetailRow label="Ad" value={order.customerName} />
+                <DetailRow label="Telefon" value={order.phone} />
+                <DetailRow label="Bölge" value={order.district} />
+                <DetailRow label="Adres" value={address} />
+                {mapsUrl && (
+                  <Button
+                    component="a"
+                    href={mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    size="small"
+                    fullWidth
+                    variant="outlined"
+                    startIcon={<RoomIcon />}
+                    onClick={(e) => e.stopPropagation()}
+                    sx={{ mt: 1, justifyContent: 'flex-start' }}
+                  >
+                    {isGpsPin(order) ? 'Haritada aç · GPS konumu' : 'Haritada aç'}
+                  </Button>
+                )}
+                <DetailRow label="Notlar" value={order.notes} />
+              </Box>
+            </Card>
+
+            <Card variant="outlined">
+              <Box sx={{ p: 2 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>Ödeme</Typography>
+                <DetailRow label="Yöntem" value={order.paymentMethod === 'card' ? 'Kart (kapıda)' : 'Nakit (kapıda)'} />
+                <DetailRow label="Ödeme durumu" value={order.paymentStatus} />
+                <Divider sx={{ my: 1 }} />
+                <DetailRow label="Oluşturuldu" value={dayjs(order.createdAt).format('D MMM YYYY HH:mm')} />
+                <DetailRow label="Güncellendi" value={dayjs(order.updatedAt).format('D MMM YYYY HH:mm')} />
+              </Box>
+            </Card>
+          </Stack>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+}
+
 export default function OrdersPage() {
-  const navigate   = useNavigate();
   const printReceipt = usePrintReceipt();
   const { data: contact } = useContactSettings();
   const [tab, setTab]       = useState(0);
@@ -37,7 +220,10 @@ export default function OrdersPage() {
   const [page, setPage]     = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(100);
   const [toDelete, setToDelete] = useState(null); // order pending delete confirmation
+  const [expandedId, setExpandedId] = useState(null); // order whose details are shown inline
   const deleteOrder = useDeleteOrder();
+
+  const toggleExpand = (id) => setExpandedId((cur) => (cur === id ? null : id));
 
   const confirmDelete = () => {
     if (!toDelete) return;
@@ -184,19 +370,27 @@ export default function OrdersPage() {
           <Table size="small">
             <TableHead>
               <TableRow sx={{ bgcolor: '#F9FAFB' }}>
-                {['Sipariş No', 'Müşteri', 'Telefon', 'Ürünler', 'Toplam', 'Durum', 'Tarih', ''].map((h) => (
-                  <TableCell key={h} sx={{ fontWeight: 700, fontSize: 13 }}>{h}</TableCell>
+                {['', 'Sipariş No', 'Müşteri', 'Telefon', 'Ürünler', 'Toplam', 'Durum', 'Tarih', ''].map((h, i) => (
+                  <TableCell key={i} sx={{ fontWeight: 700, fontSize: 13 }}>{h}</TableCell>
                 ))}
               </TableRow>
             </TableHead>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={8} align="center" sx={{ py: 4 }}><CircularProgress /></TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} align="center" sx={{ py: 4 }}><CircularProgress /></TableCell></TableRow>
               ) : paginated.length === 0 ? (
-                <TableRow><TableCell colSpan={8} align="center" sx={{ py: 4, color: 'text.secondary' }}>Sipariş bulunamadı</TableCell></TableRow>
-              ) : paginated.map((order) => (
-                <TableRow key={order._id} hover sx={{ cursor: 'pointer' }}
-                  onClick={() => navigate(`/orders/${order._id}`)}>
+                <TableRow><TableCell colSpan={9} align="center" sx={{ py: 4, color: 'text.secondary' }}>Sipariş bulunamadı</TableCell></TableRow>
+              ) : paginated.map((order) => {
+                const isExpanded = expandedId === order._id;
+                return (
+                <React.Fragment key={order._id}>
+                <TableRow hover sx={{ cursor: 'pointer' }}
+                  onClick={() => toggleExpand(order._id)}>
+                  <TableCell sx={{ width: 32 }}>
+                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); toggleExpand(order._id); }}>
+                      {isExpanded ? <KeyboardArrowUpIcon fontSize="small" /> : <KeyboardArrowDownIcon fontSize="small" />}
+                    </IconButton>
+                  </TableCell>
                   <TableCell sx={{ fontFamily: 'monospace', fontSize: 12 }}>
                     #{order._id?.slice(-6).toUpperCase()}
                   </TableCell>
@@ -212,11 +406,6 @@ export default function OrdersPage() {
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      <Tooltip title="Detayları gör">
-                        <IconButton size="small" onClick={(e) => { e.stopPropagation(); navigate(`/orders/${order._id}`); }}>
-                          <VisibilityIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
                       <Tooltip title="Yazdır (Fiş)">
                         <IconButton size="small" onClick={(e) => handlePrint(e, order)}>
                           <PrintIcon fontSize="small" />
@@ -249,7 +438,16 @@ export default function OrdersPage() {
                     </Box>
                   </TableCell>
                 </TableRow>
-              ))}
+                <TableRow>
+                  <TableCell colSpan={9} sx={{ p: 0, borderBottom: isExpanded ? undefined : 'none' }}>
+                    <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                      <OrderExpandedDetails order={order} contact={contact} printReceipt={printReceipt} />
+                    </Collapse>
+                  </TableCell>
+                </TableRow>
+                </React.Fragment>
+                );
+              })}
             </TableBody>
           </Table>
         </TableContainer>
