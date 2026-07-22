@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box, Card, Table, TableHead, TableRow, TableCell, TableBody,
   TableContainer, TablePagination, Tabs, Tab, TextField, InputAdornment,
@@ -13,13 +13,14 @@ import DownloadIcon   from '@mui/icons-material/Download';
 import DeleteIcon     from '@mui/icons-material/Delete';
 import RoomIcon       from '@mui/icons-material/Room';
 import CancelIcon     from '@mui/icons-material/Cancel';
+import TimerIcon      from '@mui/icons-material/Timer';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon   from '@mui/icons-material/KeyboardArrowUp';
 import PageLayout     from '@/components/layout/PageLayout';
 import OrderStatusBadge from './components/OrderStatusBadge';
 import { useOrders, useDeleteOrder, useUpdateOrderStatus, useCancelOrder }  from '@/hooks/useOrders';
 import { usePrintReceipt } from '@/hooks/usePrintReceipt';
-import { useContactSettings } from '@/hooks/useSettings';
+import { useContactSettings, useOrderTimerSetting } from '@/hooks/useSettings';
 import { formatPrice } from '@/utils/formatters';
 import { ORDER_STATUSES, STATUS_LABELS, STATUS_COLORS } from '@/utils/constants';
 import { buildMapsUrl, isGpsPin } from '@/utils/maps';
@@ -27,6 +28,42 @@ import dayjs from 'dayjs';
 import * as XLSX from 'xlsx';
 
 const STATUS_TABS = ['all', 'pending', 'confirmed', 'preparing', 'en_route', 'delivered', 'cancelled'];
+
+// Live mm:ss countdown from order.createdAt + the admin-configured timer
+// duration — same clock the customer sees on their tracking page, so staff
+// can tell at a glance which orders are running late without opening them.
+function OrderCountdown({ order, minutes }) {
+  const [remainingMs, setRemainingMs] = useState(null);
+  const isFinished = order.status === 'delivered' || order.status === 'cancelled';
+
+  useEffect(() => {
+    if (isFinished || !minutes) return;
+    const endTime = new Date(order.createdAt).getTime() + minutes * 60000;
+    const tick = () => setRemainingMs(Math.max(0, endTime - Date.now()));
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [order.createdAt, minutes, isFinished]);
+
+  if (isFinished || remainingMs == null) {
+    return <Typography variant="caption" color="text.secondary">—</Typography>;
+  }
+
+  const overdue = remainingMs === 0;
+  const mm = String(Math.floor(remainingMs / 60000)).padStart(2, '0');
+  const ss = String(Math.floor((remainingMs % 60000) / 1000)).padStart(2, '0');
+
+  return (
+    <Chip
+      icon={<TimerIcon fontSize="small" />}
+      label={overdue ? 'Süre doldu' : `${mm}:${ss}`}
+      size="small"
+      color={overdue ? 'error' : 'default'}
+      variant={overdue ? 'filled' : 'outlined'}
+      sx={{ fontFamily: 'monospace', fontWeight: 700 }}
+    />
+  );
+}
 
 function DetailRow({ label, value, strong, color }) {
   if (value === undefined || value === null || value === '') return null;
@@ -213,6 +250,8 @@ function OrderExpandedDetails({ order, contact, printReceipt }) {
 export default function OrdersPage() {
   const printReceipt = usePrintReceipt();
   const { data: contact } = useContactSettings();
+  const { data: orderTimer } = useOrderTimerSetting();
+  const timerMinutes = orderTimer?.minutes || 40;
   const [tab, setTab]       = useState(0);
   const [search, setSearch] = useState('');
   const [dateFrom, setDateFrom] = useState('');
@@ -370,16 +409,16 @@ export default function OrdersPage() {
           <Table size="small">
             <TableHead>
               <TableRow sx={{ bgcolor: '#F9FAFB' }}>
-                {['', 'Sipariş No', 'Müşteri', 'Telefon', 'Ürünler', 'Toplam', 'Durum', 'Tarih', ''].map((h, i) => (
+                {['', 'Sipariş No', 'Müşteri', 'Telefon', 'Ürünler', 'Toplam', 'Durum', 'Süre', 'Tarih', ''].map((h, i) => (
                   <TableCell key={i} sx={{ fontWeight: 700, fontSize: 13 }}>{h}</TableCell>
                 ))}
               </TableRow>
             </TableHead>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={9} align="center" sx={{ py: 4 }}><CircularProgress /></TableCell></TableRow>
+                <TableRow><TableCell colSpan={10} align="center" sx={{ py: 4 }}><CircularProgress /></TableCell></TableRow>
               ) : paginated.length === 0 ? (
-                <TableRow><TableCell colSpan={9} align="center" sx={{ py: 4, color: 'text.secondary' }}>Sipariş bulunamadı</TableCell></TableRow>
+                <TableRow><TableCell colSpan={10} align="center" sx={{ py: 4, color: 'text.secondary' }}>Sipariş bulunamadı</TableCell></TableRow>
               ) : paginated.map((order) => {
                 const isExpanded = expandedId === order._id;
                 return (
@@ -401,6 +440,9 @@ export default function OrdersPage() {
                   </TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>{formatPrice(order.totalPrice)}</TableCell>
                   <TableCell><OrderStatusBadge status={order.status} /></TableCell>
+                  <TableCell>
+                    <OrderCountdown order={order} minutes={timerMinutes} />
+                  </TableCell>
                   <TableCell sx={{ color: 'text.secondary', fontSize: 12 }}>
                     {dayjs(order.createdAt).format('MMM D, HH:mm')}
                   </TableCell>
@@ -439,7 +481,7 @@ export default function OrdersPage() {
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell colSpan={9} sx={{ p: 0, borderBottom: isExpanded ? undefined : 'none' }}>
+                  <TableCell colSpan={10} sx={{ p: 0, borderBottom: isExpanded ? undefined : 'none' }}>
                     <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                       <OrderExpandedDetails order={order} contact={contact} printReceipt={printReceipt} />
                     </Collapse>

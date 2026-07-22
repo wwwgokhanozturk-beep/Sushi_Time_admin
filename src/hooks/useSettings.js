@@ -29,3 +29,12 @@ export function useContactSettings() {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+// Order countdown duration (minutes) — same setting the customer tracking page uses.
+export function useOrderTimerSetting() {
+  return useQuery({
+    queryKey: ['settings', 'orderTimer'],
+    queryFn:  () => settingsService.getOrderTimer().then((r) => r.data.data.orderTimer),
+    staleTime: 5 * 60 * 1000,
+  });
+}
