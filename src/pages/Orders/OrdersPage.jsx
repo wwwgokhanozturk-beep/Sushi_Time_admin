@@ -14,11 +14,14 @@ import DeleteIcon     from '@mui/icons-material/Delete';
 import RoomIcon       from '@mui/icons-material/Room';
 import CancelIcon     from '@mui/icons-material/Cancel';
 import TimerIcon      from '@mui/icons-material/Timer';
+import StarsIcon      from '@mui/icons-material/Stars';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon   from '@mui/icons-material/KeyboardArrowUp';
 import PageLayout     from '@/components/layout/PageLayout';
 import OrderStatusBadge from './components/OrderStatusBadge';
+import { useQuery } from '@tanstack/react-query';
 import { useOrders, useDeleteOrder, useUpdateOrderStatus, useCancelOrder }  from '@/hooks/useOrders';
+import { orderService } from '@/services/orderService';
 import { usePrintReceipt } from '@/hooks/usePrintReceipt';
 import { useContactSettings, useOrderTimerSetting } from '@/hooks/useSettings';
 import { formatPrice } from '@/utils/formatters';
@@ -260,6 +263,7 @@ export default function OrdersPage() {
   const [rowsPerPage, setRowsPerPage] = useState(100);
   const [toDelete, setToDelete] = useState(null); // order pending delete confirmation
   const [expandedId, setExpandedId] = useState(null); // order whose details are shown inline
+  const [loyalOnly, setLoyalOnly] = useState(false); // show only customers with 4+ orders
   const deleteOrder = useDeleteOrder();
 
   const toggleExpand = (id) => setExpandedId((cur) => (cur === id ? null : id));
@@ -277,6 +281,26 @@ export default function OrdersPage() {
     ...(statusFilter ? { status: statusFilter } : {}),
   });
 
+  // Independent of the status tab — needed so "4+ orders" reflects a
+  // customer's whole order history, not just orders in the current tab.
+  // Plain useQuery (not useOrders) so we don't double up its socket/toast
+  // side effects by mounting the hook a second time on this page.
+  const { data: allOrders = [] } = useQuery({
+    queryKey: ['orders', { limit: 1000, forLoyaltyCount: true }],
+    queryFn: () => orderService.getAll({ limit: 1000 }).then((r) => r.data.data.orders),
+  });
+
+  // Orders per phone number across the whole loaded history (not just the
+  // currently filtered rows) — used to spot customers with 4+ orders.
+  const orderCountByPhone = React.useMemo(() => {
+    const counts = new Map();
+    for (const o of allOrders) {
+      if (!o.phone) continue;
+      counts.set(o.phone, (counts.get(o.phone) || 0) + 1);
+    }
+    return counts;
+  }, [allOrders]);
+
   const filtered = orders.filter((o) => {
     // Text (name / phone / ID)
     const matchesSearch = !search ||
@@ -290,11 +314,12 @@ export default function OrdersPage() {
       if (dateFrom && d.isBefore(dayjs(dateFrom).startOf('day'))) return false;
       if (dateTo && d.isAfter(dayjs(dateTo).endOf('day'))) return false;
     }
+    if (loyalOnly && (orderCountByPhone.get(o.phone) || 0) < 4) return false;
     return true;
   });
 
-  const hasFilter = !!(search || dateFrom || dateTo);
-  const clearFilters = () => { setSearch(''); setDateFrom(''); setDateTo(''); setPage(0); };
+  const hasFilter = !!(search || dateFrom || dateTo || loyalOnly);
+  const clearFilters = () => { setSearch(''); setDateFrom(''); setDateTo(''); setLoyalOnly(false); setPage(0); };
 
   const paginated = filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
@@ -371,6 +396,18 @@ export default function OrdersPage() {
             inputProps={{ min: dateFrom || undefined }}
             sx={{ width: 165 }}
           />
+          <Tooltip title="4 veya daha fazla sipariş veren müşterileri göster">
+            <Button
+              size="small"
+              variant={loyalOnly ? 'contained' : 'outlined'}
+              color="warning"
+              startIcon={<StarsIcon fontSize="small" />}
+              onClick={() => { setLoyalOnly((v) => !v); setPage(0); }}
+            >
+              Sadık Müşteriler (4+)
+            </Button>
+          </Tooltip>
+
           {hasFilter && (
             <Button size="small" color="inherit" onClick={clearFilters}>
               Temizle

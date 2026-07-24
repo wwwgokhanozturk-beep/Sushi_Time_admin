@@ -2,14 +2,13 @@ import React, { useState, useCallback } from 'react';
 import {
   Box, Card, CardContent, Typography, TextField, InputAdornment,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Chip, CircularProgress, Alert, Stack, ToggleButtonGroup,
-  ToggleButton, Pagination, Avatar, IconButton, Tooltip, Button,
+  Chip, CircularProgress, Alert,
+  Pagination, Avatar, IconButton, Tooltip, Button,
   Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import StarsIcon from '@mui/icons-material/Stars';
 import PeopleIcon from '@mui/icons-material/People';
-import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -49,7 +48,6 @@ export default function UsersPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
-  const [loyalFilter, setLoyalFilter] = useState('all'); // 'all' | 'loyal'
 
   // debounce search: only fire query after user stops typing
   const handleSearchChange = (e) => {
@@ -66,7 +64,6 @@ export default function UsersPage() {
     page,
     limit: PAGE_SIZE,
     ...(search ? { search } : {}),
-    ...(loyalFilter === 'loyal' ? { loyal: 'true' } : {}),
   };
 
   const { data, isLoading, isError, error } = useQuery({
@@ -98,66 +95,26 @@ export default function UsersPage() {
     if (toDelete) deleteMutation.mutate(toDelete._id);
   };
 
-  const handleLoyalFilter = (_, val) => {
-    if (val !== null) {
-      setLoyalFilter(val);
-      setPage(1);
-    }
-  };
-
   return (
     <PageLayout title="Kullanıcılar">
       {/* ── Filters bar ── */}
       <Card elevation={0} sx={{ border: '1px solid #E5E7EB', borderRadius: 3, mb: 3 }}>
         <CardContent>
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            spacing={2}
-            alignItems={{ sm: 'center' }}
-            justifyContent="space-between"
-          >
-            <TextField
-              placeholder="İsim, e-posta veya telefon ile ara… (Enter'a basın)"
-              size="small"
-              value={searchInput}
-              onChange={handleSearchChange}
-              onKeyDown={handleSearchKeyDown}
-              sx={{ minWidth: 300 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon fontSize="small" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <ToggleButtonGroup
-              value={loyalFilter}
-              exclusive
-              onChange={handleLoyalFilter}
-              size="small"
-              sx={{ '& .MuiToggleButton-root': { px: 2, fontWeight: 600, fontSize: 13 } }}
-            >
-              <ToggleButton value="all">
-                <PeopleIcon fontSize="small" sx={{ mr: 0.5 }} />
-                Tüm Kullanıcılar
-              </ToggleButton>
-              <ToggleButton value="loyal">
-                <StarsIcon fontSize="small" sx={{ mr: 0.5 }} />
-                Sadık Müşteriler
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Stack>
-
-          {loyalFilter === 'loyal' && (
-            <Box sx={{ mt: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <LocalOfferIcon fontSize="small" color="success" />
-              <Typography variant="caption" color="success.main" fontWeight={600}>
-                3'ten fazla tamamlanmış siparişi olan müşteriler gösteriliyor
-              </Typography>
-            </Box>
-          )}
+          <TextField
+            placeholder="İsim, e-posta veya telefon ile ara… (Enter'a basın)"
+            size="small"
+            value={searchInput}
+            onChange={handleSearchChange}
+            onKeyDown={handleSearchKeyDown}
+            sx={{ minWidth: 300 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+          />
         </CardContent>
       </Card>
 
@@ -166,7 +123,6 @@ export default function UsersPage() {
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="text.secondary">
             Toplam: <strong>{pagination?.total ?? 0}</strong> kullanıcı
-            {loyalFilter === 'loyal' && ' (sadakat durumlu)'}
           </Typography>
         </Box>
       )}
@@ -206,11 +162,7 @@ export default function UsersPage() {
                 <TableRow>
                   <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
                     <PeopleIcon sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
-                    <Typography color="text.secondary">
-                      {loyalFilter === 'loyal'
-                        ? 'Henüz sadık kullanıcı yok (4+ sipariş gerekli)'
-                        : 'Kullanıcı bulunamadı'}
-                    </Typography>
+                    <Typography color="text.secondary">Kullanıcı bulunamadı</Typography>
                   </TableCell>
                 </TableRow>
               )}
