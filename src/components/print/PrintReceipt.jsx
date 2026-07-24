@@ -57,6 +57,12 @@ const PrintReceipt = forwardRef(function PrintReceipt({ order, contactNumber }, 
           <span>Sipariş Zamanı:</span>
           <strong>{orderDate} - {orderTime}</strong>
         </div>
+        {order.notes && (
+          <>
+            <div style={s.blackRow}>SİPARİŞ AÇIKLAMASI</div>
+            <div style={s.notesRow}>{order.notes}</div>
+          </>
+        )}
       </div>
 
       {/* ── Ürünler tablosu ── */}
@@ -127,6 +133,16 @@ const s = {
     wordBreak: 'break-word',
     fontSize: 14,
     fontWeight: 700,
+    lineHeight: 1.35,
+  },
+  // Sipariş notu — müşterinin checkout'ta girdiği serbest metin.
+  notesRow: {
+    padding: '1.5mm',
+    borderBottom: '1px solid #000',
+    wordBreak: 'break-word',
+    fontSize: 12,
+    fontWeight: 600,
+    fontStyle: 'italic',
     lineHeight: 1.35,
   },
   kv: {
