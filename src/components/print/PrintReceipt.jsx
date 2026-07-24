@@ -27,6 +27,13 @@ const PrintReceipt = forwardRef(function PrintReceipt({ order, contactNumber }, 
   return (
     <div id="receipt-print-area" ref={ref} style={s.area}>
 
+      {/* ── Ön sipariş uyarısı — restoran kapalıyken alınan sipariş ── */}
+      {order.scheduledFor && (
+        <div style={s.preorderBanner}>
+          ⏰ ÖN SİPARİŞ — {dayjs(order.scheduledFor).format('DD.MM.YYYY HH:mm')} İÇİN
+        </div>
+      )}
+
       {/* ── Logo ── */}
       {/* logo-receipt.png — logo.png ile aynı görsel, arka planındaki
           (saydamlık yerine pikselleşmiş) gri dama deseni temizlenmiş hâli. */}
@@ -111,6 +118,15 @@ const s = {
     margin: 0,
     boxSizing: 'border-box',
     lineHeight: 1.3,
+  },
+  preorderBanner: {
+    background: '#000',
+    color: '#fff',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    padding: '2mm',
+    marginBottom: '2mm',
+    fontSize: 12,
   },
   logo: {
     display: 'block',

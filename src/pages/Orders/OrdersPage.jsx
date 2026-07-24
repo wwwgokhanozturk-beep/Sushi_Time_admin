@@ -38,28 +38,34 @@ const STATUS_TABS = ['all', 'pending', 'confirmed', 'preparing', 'en_route', 'de
 function OrderCountdown({ order, minutes }) {
   const [remainingMs, setRemainingMs] = useState(null);
   const isFinished = order.status === 'delivered' || order.status === 'cancelled';
+  // Ön sipariş: sayaç, sipariş zamanından değil seçilen saatten geriye sayar.
+  const baseTime = order.scheduledFor ? new Date(order.scheduledFor).getTime() : new Date(order.createdAt).getTime();
+  const endTime = order.scheduledFor ? baseTime : baseTime + minutes * 60000;
 
   useEffect(() => {
     if (isFinished || !minutes) return;
-    const endTime = new Date(order.createdAt).getTime() + minutes * 60000;
     const tick = () => setRemainingMs(Math.max(0, endTime - Date.now()));
     tick();
     const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
-  }, [order.createdAt, minutes, isFinished]);
+  }, [endTime, minutes, isFinished]);
 
   if (isFinished || remainingMs == null) {
     return <Typography variant="caption" color="text.secondary">—</Typography>;
   }
 
   const overdue = remainingMs === 0;
-  const mm = String(Math.floor(remainingMs / 60000)).padStart(2, '0');
-  const ss = String(Math.floor((remainingMs % 60000) / 1000)).padStart(2, '0');
+  const large = remainingMs >= 3600000;
+  const label = overdue
+    ? 'Süre doldu'
+    : large
+    ? `${String(Math.floor(remainingMs / 3600000)).padStart(2, '0')}:${String(Math.floor((remainingMs % 3600000) / 60000)).padStart(2, '0')}`
+    : `${String(Math.floor(remainingMs / 60000)).padStart(2, '0')}:${String(Math.floor((remainingMs % 60000) / 1000)).padStart(2, '0')}`;
 
   return (
     <Chip
       icon={<TimerIcon fontSize="small" />}
-      label={overdue ? 'Süre doldu' : `${mm}:${ss}`}
+      label={label}
       size="small"
       color={overdue ? 'error' : 'default'}
       variant={overdue ? 'filled' : 'outlined'}
@@ -209,6 +215,14 @@ function OrderExpandedDetails({ order, contact, printReceipt }) {
             <Card variant="outlined">
               <Box sx={{ p: 2 }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>Müşteri</Typography>
+                {order.scheduledFor && (
+                  <DetailRow
+                    label="Ön Sipariş Zamanı"
+                    value={dayjs(order.scheduledFor).format('D MMM YYYY, HH:mm')}
+                    strong
+                    color="info.main"
+                  />
+                )}
                 <DetailRow label="Ad" value={order.customerName} />
                 <DetailRow label="Telefon" value={order.phone} />
                 <DetailRow label="Bölge" value={order.district} />
@@ -482,6 +496,17 @@ export default function OrdersPage() {
                   </TableCell>
                   <TableCell sx={{ color: 'text.secondary', fontSize: 12 }}>
                     {dayjs(order.createdAt).format('MMM D, HH:mm')}
+                    {order.scheduledFor && (
+                      <Box sx={{ mt: 0.5 }}>
+                        <Chip
+                          label={`Ön: ${dayjs(order.scheduledFor).format('D MMM, HH:mm')}`}
+                          size="small"
+                          color="info"
+                          variant="outlined"
+                          sx={{ fontSize: 11, height: 20 }}
+                        />
+                      </Box>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
