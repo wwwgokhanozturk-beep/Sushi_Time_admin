@@ -14,11 +14,17 @@ import { analyticsService } from '@/services/analyticsService';
 import { formatPrice } from '@/utils/formatters';
 import PageLayout from '@/components/layout/PageLayout';
 
-// Default range: current month
+// Default range: current month. Built from local Y/M/D directly — going
+// through toISOString() would convert to UTC first, which silently rolls
+// the 1st of the month back to the previous day in any timezone ahead of
+// UTC (e.g. Türkiye, UTC+3), understating the range by a day.
 function defaultRange() {
   const now = new Date();
-  const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
-  const to = now.toISOString().slice(0, 10);
+  const pad = (n) => String(n).padStart(2, '0');
+  const y = now.getFullYear();
+  const m = pad(now.getMonth() + 1);
+  const from = `${y}-${m}-01`;
+  const to = `${y}-${m}-${pad(now.getDate())}`;
   return { from, to };
 }
 
