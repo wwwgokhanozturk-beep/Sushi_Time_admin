@@ -8,6 +8,7 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import CancelIcon from '@mui/icons-material/Cancel';
 import { useQuery } from '@tanstack/react-query';
 import { alpha, useTheme } from '@mui/material/styles';
 import { analyticsService } from '@/services/analyticsService';
@@ -193,7 +194,7 @@ export default function AnalyticsPage() {
 
       {/* ── Metric Cards ── */}
       <Grid container spacing={2.5} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <MetricCard
             icon={<TrendingUpIcon />}
             label="Toplam Gelir"
@@ -202,7 +203,7 @@ export default function AnalyticsPage() {
             sub="İptal edilmeyen siparişler"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <MetricCard
             icon={<ShoppingCartIcon />}
             label="Sipariş Sayısı"
@@ -211,13 +212,22 @@ export default function AnalyticsPage() {
             sub="İptal edilmeyen siparişler"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <MetricCard
             icon={<ReceiptLongIcon />}
             label="Ortalama Sepet"
             value={data ? formatPrice(data.avgCheck) : '—'}
             color="warning.main"
             sub="Gelir ÷ Sipariş"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            icon={<CancelIcon />}
+            label="İptal Edilen"
+            value={data ? data.cancelledCount.toLocaleString() : '—'}
+            color="error.main"
+            sub={data ? `${formatPrice(data.cancelledRevenue)} değerinde` : 'Sipariş sayısı'}
           />
         </Grid>
       </Grid>
@@ -289,22 +299,33 @@ export default function AnalyticsPage() {
           {!monthlyIsError && (
             <>
               <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={12} sm={4}>
+                <Grid item xs={12} sm={3}>
                   <Typography variant="caption" color="text.secondary">Toplam Gelir</Typography>
                   <Typography variant="h6" fontWeight={800}>
                     {monthlyData ? formatPrice(monthlyData.totalRevenue) : '—'}
                   </Typography>
                 </Grid>
-                <Grid item xs={12} sm={4}>
+                <Grid item xs={12} sm={3}>
                   <Typography variant="caption" color="text.secondary">Sipariş Sayısı</Typography>
                   <Typography variant="h6" fontWeight={800}>
                     {monthlyData ? monthlyData.orderCount.toLocaleString() : '—'}
                   </Typography>
                 </Grid>
-                <Grid item xs={12} sm={4}>
+                <Grid item xs={12} sm={3}>
                   <Typography variant="caption" color="text.secondary">Ortalama Sepet</Typography>
                   <Typography variant="h6" fontWeight={800}>
                     {monthlyData ? formatPrice(monthlyData.avgCheck) : '—'}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={3}>
+                  <Typography variant="caption" color="error.main">İptal Edilen</Typography>
+                  <Typography variant="h6" fontWeight={800} color="error.main">
+                    {monthlyData ? monthlyData.cancelledCount.toLocaleString() : '—'}
+                    {monthlyData?.cancelledCount > 0 && (
+                      <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 0.75, fontWeight: 500 }}>
+                        ({formatPrice(monthlyData.cancelledRevenue)})
+                      </Typography>
+                    )}
                   </Typography>
                 </Grid>
               </Grid>
