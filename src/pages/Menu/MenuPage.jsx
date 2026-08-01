@@ -23,12 +23,14 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ReorderIcon from "@mui/icons-material/Reorder";
+import ToggleOnIcon from "@mui/icons-material/ToggleOn";
+import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import PageLayout from "@/components/layout/PageLayout";
 import CategoryFilter from "./components/CategoryFilter";
 import CategoryOrderDialog from "./components/CategoryOrderDialog";
 import MenuOrderDialog from "./components/MenuOrderDialog";
 import SortIcon from "@mui/icons-material/SwapVert";
-import { useMenuItems, useDeleteMenuItem } from "@/hooks/useMenu";
+import { useMenuItems, useDeleteMenuItem, useUpdateMenuItem } from "@/hooks/useMenu";
 import { useNavigate } from "react-router-dom";
 import { formatPrice } from "@/utils/formatters";
 
@@ -55,6 +57,11 @@ export default function MenuPage() {
   const [orderOpen, setOrderOpen] = useState(false);
   const [itemOrderOpen, setItemOrderOpen] = useState(false);
   const deleteMut = useDeleteMenuItem();
+  const updateMut = useUpdateMenuItem();
+
+  const toggleAvailability = (item) => {
+    updateMut.mutate({ id: item._id, data: { isAvailable: !item.isAvailable } });
+  };
 
   const { data: items = [], isLoading } = useMenuItems();
 
@@ -244,6 +251,16 @@ export default function MenuPage() {
                       {formatPrice(item.price)}
                     </Typography>
                     <Box>
+                      <Tooltip title={item.isAvailable ? "Tükendi olarak işaretle" : "Mevcut olarak işaretle"}>
+                        <IconButton
+                          size="small"
+                          color={item.isAvailable ? "success" : "default"}
+                          onClick={() => toggleAvailability(item)}
+                          disabled={updateMut.isPending}
+                        >
+                          {item.isAvailable ? <ToggleOnIcon /> : <ToggleOffIcon />}
+                        </IconButton>
+                      </Tooltip>
                       <Tooltip title="Düzenle">
                         <IconButton
                           size="small"
