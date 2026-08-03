@@ -15,11 +15,14 @@ const SAMPLE_DATA = [
 ];
 
 export default function RevenueChart({ data = SAMPLE_DATA }) {
+  // With ~30 daily points, showing every label would overlap — thin them out.
+  const tickInterval = data.length > 10 ? Math.ceil(data.length / 10) - 1 : 0;
+
   return (
     <Card sx={{ height: '100%' }}>
       <CardContent>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-          <Typography variant="h6" fontWeight={700}>Haftalık Gelir</Typography>
+          <Typography variant="h6" fontWeight={700}>Aylık Gelir</Typography>
           <Typography variant="h6" fontWeight={800} color="primary">
             ₺{data.reduce((s, d) => s + d.revenue, 0).toLocaleString('tr-TR')}
           </Typography>
@@ -33,7 +36,8 @@ export default function RevenueChart({ data = SAMPLE_DATA }) {
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" />
-            <XAxis dataKey="day" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+            <XAxis dataKey="day" tick={{ fontSize: 12 }} axisLine={false} tickLine={false}
+              interval={tickInterval} />
             <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false}
               tickFormatter={(v) => `₺${v}`} />
             <Tooltip formatter={(v) => [`₺${v}`, 'Gelir']} />

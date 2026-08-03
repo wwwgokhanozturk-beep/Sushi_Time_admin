@@ -12,28 +12,31 @@ import { useOrders }    from '@/hooks/useOrders';
 import { formatPrice }  from '@/utils/formatters';
 import dayjs            from 'dayjs';
 
-function buildWeeklyRevenue(orders) {
-  const days = [];
-  for (let i = 6; i >= 0; i--) {
+// Last `days` days of revenue, oldest first — used by the dashboard chart.
+function buildDailyRevenue(orders, days) {
+  const result = [];
+  for (let i = days - 1; i >= 0; i--) {
     const d = dayjs().subtract(i, 'day');
     const key = d.format('YYYY-MM-DD');
-    const label = d.format('ddd');
+    const label = d.format('D MMM');
     const revenue = orders
       .filter((o) => o.status !== 'cancelled' && dayjs(o.createdAt).format('YYYY-MM-DD') === key)
       .reduce((s, o) => s + (o.totalPrice || 0), 0);
-    days.push({ day: label, revenue: parseFloat(revenue.toFixed(2)) });
+    result.push({ day: label, revenue: parseFloat(revenue.toFixed(2)) });
   }
-  return days;
+  return result;
 }
 
 export default function DashboardPage() {
-  const { data: orders = [], isLoading } = useOrders();
+  // limit is generous so the monthly chart below has all 30 days' worth of
+  // orders to work with — the default page size (20) would silently cut it off.
+  const { data: orders = [], isLoading } = useOrders({ limit: 1000 });
 
   const totalRevenue   = orders.reduce((s, o) => s + (o.totalPrice || 0), 0);
   const pendingOrders  = orders.filter((o) => o.status === 'pending').length;
   const deliveredOrders= orders.filter((o) => o.status === 'delivered').length;
   const recent         = [...orders].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 6);
-  const weeklyData     = buildWeeklyRevenue(orders);
+  const monthlyData    = buildDailyRevenue(orders, 30);
 
   return (
     <PageLayout title="Panel">
@@ -54,7 +57,7 @@ export default function DashboardPage() {
       {/* ── Chart + recent orders ──────────────────── */}
       <Grid container spacing={3}>
         <Grid item xs={12} md={7}>
-          <RevenueChart data={weeklyData} />
+          <RevenueChart data={monthlyData} />
         </Grid>
 
         <Grid item xs={12} md={5}>
