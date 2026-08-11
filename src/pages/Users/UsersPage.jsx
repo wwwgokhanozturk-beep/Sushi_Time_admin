@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import {
   Box, Card, CardContent, Typography, TextField, InputAdornment,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Chip, CircularProgress, Alert,
+  Chip, CircularProgress, Alert, MenuItem,
   Pagination, Avatar, IconButton, Tooltip, Button,
   Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
 } from '@mui/material';
@@ -43,6 +43,11 @@ function userInitials(name = '') {
 }
 
 const ROLE_COLOR = { admin: 'error', driver: 'warning', customer: 'default' };
+const ROLE_OPTIONS = [
+  { value: 'customer', label: 'Müşteri' },
+  { value: 'driver',   label: 'Kurye' },
+  { value: 'admin',    label: 'Yönetici' },
+];
 
 export default function UsersPage() {
   const [page, setPage] = useState(1);
@@ -93,6 +98,34 @@ export default function UsersPage() {
 
   const confirmDelete = () => {
     if (toDelete) deleteMutation.mutate(toDelete._id);
+  };
+
+  // ── Role change ──────────────────────────────────────────────────────
+  // Promoting someone to admin hands over full control of the panel, so that
+  // one goes through a confirmation; the rest apply straight away.
+  const [pendingRole, setPendingRole] = useState(null); // { user, role }
+
+  const roleMutation = useMutation({
+    mutationFn: ({ id, role }) => userService.updateUserRole(id, role),
+    onSuccess: (_res, vars) => {
+      qc.invalidateQueries({ queryKey: ['adminUsers'] });
+      qc.invalidateQueries({ queryKey: ['drivers'] });
+      const label = ROLE_OPTIONS.find((r) => r.value === vars.role)?.label || vars.role;
+      toast.success(`Rol "${label}" olarak güncellendi. Kullanıcı yeniden giriş yapmalı.`, {
+        duration: 6000,
+      });
+    },
+    onError: (err) => toast.error(err.response?.data?.message || 'Rol değiştirilemedi'),
+    onSettled: () => setPendingRole(null),
+  });
+
+  const handleRoleChange = (user, role) => {
+    if (role === user.role) return;
+    if (role === 'admin') {
+      setPendingRole({ user, role });
+      return;
+    }
+    roleMutation.mutate({ id: user._id, role });
   };
 
   return (
@@ -190,13 +223,33 @@ export default function UsersPage() {
                     <Typography variant="body2">{user.phone}</Typography>
                   </TableCell>
                   <TableCell>
-                    <Chip
-                      label={user.role}
-                      size="small"
-                      variant="outlined"
-                      color={ROLE_COLOR[user.role] || 'default'}
-                      sx={{ fontWeight: 600, fontSize: 11, textTransform: 'capitalize' }}
-                    />
+                    {currentUserId === user._id ? (
+                      <Tooltip title="Kendi rolünüzü değiştiremezsiniz">
+                        <Chip
+                          label={ROLE_OPTIONS.find((r) => r.value === user.role)?.label || user.role}
+                          size="small"
+                          variant="outlined"
+                          color={ROLE_COLOR[user.role] || 'default'}
+                          sx={{ fontWeight: 600, fontSize: 11 }}
+                        />
+                      </Tooltip>
+                    ) : (
+                      <TextField
+                        select
+                        size="small"
+                        variant="outlined"
+                        value={user.role}
+                        onChange={(e) => handleRoleChange(user, e.target.value)}
+                        disabled={roleMutation.isPending}
+                        sx={{ minWidth: 130, '& .MuiInputBase-input': { py: 0.75, fontSize: 13, fontWeight: 600 } }}
+                      >
+                        {ROLE_OPTIONS.map((option) => (
+                          <MenuItem key={option.value} value={option.value} sx={{ fontSize: 13 }}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    )}
                   </TableCell>
                   <TableCell>
                     <OrderCountBadge count={user.ordersCount || 0} />
@@ -255,6 +308,27 @@ export default function UsersPage() {
           </Box>
         )}
       </Card>
+
+      <Dialog open={!!pendingRole} onClose={() => setPendingRole(null)}>
+        <DialogTitle>Yönetici yap</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            <strong>{pendingRole?.user?.name}</strong> ({pendingRole?.user?.email}) panele
+            tam erişim kazanacak: siparişler, menü, kullanıcılar ve ayarlar. Devam edilsin mi?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPendingRole(null)}>Vazgeç</Button>
+          <Button
+            color="error"
+            variant="contained"
+            disabled={roleMutation.isPending}
+            onClick={() => roleMutation.mutate({ id: pendingRole.user._id, role: 'admin' })}
+          >
+            {roleMutation.isPending ? 'Kaydediliyor…' : 'Yönetici yap'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={!!toDelete} onClose={() => setToDelete(null)}>
         <DialogTitle>Kullanıcıyı sil</DialogTitle>
