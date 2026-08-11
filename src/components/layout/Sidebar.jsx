@@ -21,6 +21,8 @@ import CampaignIcon from "@mui/icons-material/Campaign";
 import ChatIcon from "@mui/icons-material/Chat";
 import SettingsIcon from "@mui/icons-material/Settings";
 import QrCode2Icon from "@mui/icons-material/QrCode2";
+import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
+import MapIcon from "@mui/icons-material/Map";
 import { useNavigate, useLocation } from "react-router-dom";
 import { SIDEBAR_WIDTH } from "@/utils/constants";
 import { useChatNotificationStore } from "@/store/chatNotificationStore";
@@ -32,6 +34,8 @@ const NAV_ITEMS = [
   { label: "Kategoriler", icon: <CategoryIcon />, path: "/categories" },
   { label: "Kampanyalar", icon: <LocalOfferIcon />, path: "/promotions" },
   { label: "Kullanıcılar", icon: <PeopleIcon />, path: "/users" },
+  { label: "Kuryeler", icon: <TwoWheelerIcon />, path: "/drivers" },
+  { label: "Kurye Haritası", icon: <MapIcon />, path: "/drivers/map" },
   { label: "Analitik", icon: <BarChartIcon />, path: "/analytics" },
   { label: "Bildirimler", icon: <CampaignIcon />, path: "/notifications" },
   { label: "Sohbet", icon: <ChatIcon />, path: "/chat" },

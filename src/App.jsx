@@ -10,6 +10,8 @@ import MenuPage            from '@/pages/Menu/MenuPage';
 import MenuItemFormPage    from '@/pages/Menu/MenuItemFormPage';
 import CategoryImagesPage  from '@/pages/Categories/CategoryImagesPage';
 import UsersPage           from '@/pages/Users/UsersPage';
+import DriversPage         from '@/pages/Drivers/DriversPage';
+import DriversMapPage      from '@/pages/Drivers/DriversMapPage';
 import AnalyticsPage       from '@/pages/Analytics/AnalyticsPage';
 import PromotionsPage      from '@/pages/Promotions/PromotionsPage';
 import PromotionFormPage   from '@/pages/Promotions/PromotionFormPage';
@@ -40,6 +42,8 @@ export default function App() {
       <Route path="/menu/:id/edit" element={<ProtectedRoute><MenuItemFormPage /></ProtectedRoute>} />
       <Route path="/categories" element={<ProtectedRoute><CategoryImagesPage /></ProtectedRoute>} />
       <Route path="/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
+      <Route path="/drivers" element={<ProtectedRoute><DriversPage /></ProtectedRoute>} />
+      <Route path="/drivers/map" element={<ProtectedRoute><DriversMapPage /></ProtectedRoute>} />
       <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
       <Route path="/promotions" element={<ProtectedRoute><PromotionsPage /></ProtectedRoute>} />
       <Route path="/promotions/new" element={<ProtectedRoute><PromotionFormPage /></ProtectedRoute>} />
