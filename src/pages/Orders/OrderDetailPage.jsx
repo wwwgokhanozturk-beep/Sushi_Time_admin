@@ -12,7 +12,7 @@ import RoomIcon      from '@mui/icons-material/Room';
 import PageLayout    from '@/components/layout/PageLayout';
 import OrderStatusBadge from './components/OrderStatusBadge';
 import { useOrder, useUpdateOrderStatus, useCancelOrder } from '@/hooks/useOrders';
-import { useDrivers, useAssignDriver } from '@/hooks/useDrivers';
+import DriverAssignCard from './components/DriverAssignCard';
 import { usePrintReceipt } from '@/hooks/usePrintReceipt';
 import { useContactSettings } from '@/hooks/useSettings';
 import { formatPrice } from '@/utils/formatters';
@@ -41,15 +41,6 @@ export default function OrderDetailPage() {
   const { data: order, isLoading, isError } = useOrder(id);
   const updateStatus = useUpdateOrderStatus();
   const cancelOrder  = useCancelOrder();
-  const { data: drivers, isLoading: driversLoading } = useDrivers();
-  const assignDriver = useAssignDriver();
-
-  // The order comes back with `driver` populated (name + phone) or null.
-  const assignedDriverId = order?.driver?._id || order?.driver || '';
-  const assignedDriver =
-    (order?.driver && order.driver.name ? order.driver : null) ||
-    (drivers || []).find((d) => d._id === assignedDriverId) ||
-    null;
 
   if (isLoading) {
     return (
@@ -208,35 +199,7 @@ export default function OrderDetailPage() {
 
 
             {/* Courier assignment — the customer's live map depends on it */}
-            <Card>
-              <CardContent>
-                <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5 }}>Kurye</Typography>
-                <TextField
-                  select
-                  fullWidth
-                  size="small"
-                  value={assignedDriverId}
-                  onChange={(e) => assignDriver.mutate({ orderId: order._id, driverId: e.target.value || null })}
-                  disabled={isCancelled || isDelivered || assignDriver.isPending || driversLoading}
-                  helperText={
-                    assignedDriverId
-                      ? 'Kurye "Yolda" durumunda konumunu müşteriye canlı iletir.'
-                      : 'Sipariş yola çıkmadan önce bir kurye atayın.'
-                  }
-                >
-                  <MenuItem value="">— Atanmadı —</MenuItem>
-                  {(drivers || []).map((driver) => (
-                    <MenuItem key={driver._id} value={driver._id}>
-                      {driver.name}
-                      {driver.activeOrderCount > 0 ? ` (${driver.activeOrderCount} aktif)` : ''}
-                    </MenuItem>
-                  ))}
-                </TextField>
-                {assignedDriver?.phone && (
-                  <Row label="Telefon" value={assignedDriver.phone} />
-                )}
-              </CardContent>
-            </Card>
+            <DriverAssignCard order={order} />
 
             {/* Customer */}
             <Card>

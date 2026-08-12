@@ -19,6 +19,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon   from '@mui/icons-material/KeyboardArrowUp';
 import PageLayout     from '@/components/layout/PageLayout';
 import OrderStatusBadge from './components/OrderStatusBadge';
+import DriverAssignCard from './components/DriverAssignCard';
 import { useQuery } from '@tanstack/react-query';
 import { useOrders, useDeleteOrder, useUpdateOrderStatus, useCancelOrder }  from '@/hooks/useOrders';
 import { orderService } from '@/services/orderService';
@@ -211,6 +212,9 @@ function OrderExpandedDetails({ order, contact, printReceipt }) {
                 )}
               </Box>
             </Card>
+
+            {/* Kurye ataması — müşterinin canlı haritası buna bağlı */}
+            <DriverAssignCard order={order} variant="outlined" />
 
             <Card variant="outlined">
               <Box sx={{ p: 2 }}>
