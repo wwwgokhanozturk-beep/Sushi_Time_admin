@@ -3,16 +3,28 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { orderService } from '@/services/orderService';
 import useSocket from './useSocket';
 import toast from 'react-hot-toast';
+import { startAlert } from '@/utils/alertSound';
+
+// An order older than this was not "just placed" — it showed up because the
+// operator switched a filter, and must not set off the alarm.
+const FRESH_ORDER_WINDOW_MS = 5 * 60_000;
 
 export function useOrders(params = {}) {
   const qc = useQueryClient();
   const seenDiscountIds = useRef(new Set());
   const seenOrderIds = useRef(new Set());
+  // The first page of results is the starting picture, not a batch of news.
+  const seenInitialised = useRef(false);
+  const openedAt = useRef(Date.now());
 
   const query = useQuery({
     queryKey: ['orders', params],
     queryFn:  () => orderService.getAll(params).then((r) => r.data.data.orders),
     refetchInterval: 30000, // fallback polling every 30s
+    // The panel spends most of its life in a background tab, and React Query
+    // pauses interval refetches there by default — which would leave the
+    // missed-order safety net switched off exactly when it is needed.
+    refetchIntervalInBackground: true,
   });
 
   // Real-time: invalidate query cache on socket events
@@ -32,6 +44,36 @@ export function useOrders(params = {}) {
     'order:cancelled': () => qc.invalidateQueries({ queryKey: ['orders'] }),
     'order:deleted': () => qc.invalidateQueries({ queryKey: ['orders'] }),
   });
+
+  // Safety net for a missed socket event. If the connection dropped (laptop
+  // asleep, flaky Wi-Fi, a backend redeploy), `order:new` never arrives and the
+  // order used to appear in the list in complete silence. The 30s poll now
+  // rings for anything genuinely new that the socket did not announce.
+  useEffect(() => {
+    if (!query.data) return;
+
+    if (!seenInitialised.current) {
+      query.data.forEach((order) => seenOrderIds.current.add(order._id));
+      seenInitialised.current = true;
+      return;
+    }
+
+    const missed = query.data.filter(
+      (order) =>
+        !seenOrderIds.current.has(order._id) &&
+        new Date(order.createdAt).getTime() > openedAt.current - FRESH_ORDER_WINDOW_MS,
+    );
+    if (missed.length === 0) return;
+
+    missed.forEach((order) => seenOrderIds.current.add(order._id));
+    startAlert('order');
+    missed.forEach((order) => {
+      toast.success(
+        `🔔 Yeni sipariş #${order._id.slice(-6).toUpperCase()} — ${order.totalPrice ?? ''} ₺`,
+        { duration: 8000, style: { maxWidth: 380 } },
+      );
+    });
+  }, [query.data]);
 
   // Notify admin when a loyalty-discounted order appears for the first time
   useEffect(() => {

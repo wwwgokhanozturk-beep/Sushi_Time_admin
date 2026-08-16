@@ -6,20 +6,26 @@ import {
 import MenuIcon          from '@mui/icons-material/Menu';
 import LogoutIcon        from '@mui/icons-material/Logout';
 import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
+import VolumeOffIcon     from '@mui/icons-material/VolumeOff';
 import { useAuthStore }  from '@/store/authStore';
 import { SIDEBAR_WIDTH } from '@/utils/constants';
 import { useNavigate }   from 'react-router-dom';
 import NotificationBell  from '@/components/ui/NotificationBell';
 import ChatNotificationBell from '@/components/ui/ChatNotificationBell';
-import { isAlerting, subscribeAlerting, stopAlert } from '@/utils/alertSound';
+import {
+  isAlerting, subscribeAlerting, stopAlert,
+  isSoundBlocked, subscribeSoundBlocked, unlockSound,
+} from '@/utils/alertSound';
 
 export default function Topbar({ onMenuClick, title = 'Panel' }) {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [alerting, setAlerting] = React.useState(isAlerting());
+  const [soundBlocked, setSoundBlocked] = React.useState(isSoundBlocked());
 
   React.useEffect(() => subscribeAlerting(setAlerting), []);
+  React.useEffect(() => subscribeSoundBlocked(setSoundBlocked), []);
 
   const handleLogout = () => {
     logout();
@@ -50,6 +56,31 @@ export default function Topbar({ onMenuClick, title = 'Panel' }) {
         }}
       >
         Sesi durdur
+      </Button>
+    )}
+
+    {/* Tarayıcı sesi engellediğinde: sessizlik "sipariş yok" sanılmasın */}
+    {soundBlocked && !alerting && (
+      <Button
+        variant="contained"
+        color="warning"
+        size="large"
+        startIcon={<VolumeOffIcon />}
+        onClick={unlockSound}
+        sx={{
+          position: 'fixed',
+          bottom: 28,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 2000,
+          borderRadius: 999,
+          px: 3,
+          py: 1.25,
+          fontWeight: 800,
+          boxShadow: '0 8px 24px rgba(245,158,11,0.45)',
+        }}
+      >
+        Ses kapalı — açmak için dokunun
       </Button>
     )}
     <AppBar

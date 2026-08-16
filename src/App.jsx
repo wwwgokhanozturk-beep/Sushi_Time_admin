@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
+import { installAudioUnlock } from '@/utils/alertSound';
 
 import LoginPage           from '@/pages/Auth/LoginPage';
 import DashboardPage       from '@/pages/Dashboard/DashboardPage';
@@ -28,6 +29,10 @@ function ProtectedRoute({ children }) {
 }
 
 export default function App() {
+  // Браузер разрешает звук только после жеста пользователя — ловим самый
+  // первый и «прогреваем» аудио, иначе первый заказ смены звонит в пустоту.
+  useEffect(() => { installAudioUnlock(); }, []);
+
   return (
     <Routes>
       {/* Public */}

@@ -4,6 +4,14 @@
 // keep ringing so it can't be missed: startAlert() repeats the chime every few
 // seconds for up to ~1 minute, and stopAlert() silences it the moment the admin
 // acknowledges (opens the relevant bell / marks read / clicks a notification).
+//
+// Browsers refuse to start an AudioContext until the user has interacted with
+// the page, and a panel left open on a counter gets no interaction at all — so
+// the first order of a shift used to ring into the void. Two things guard
+// against that: installAudioUnlock() warms the context on the first gesture,
+// and every play path awaits resume() before scheduling notes (scheduling
+// against a suspended context's frozen clock is what produced silent or
+// clipped chimes).
 
 let ctx = null;
 let repeatTimer = null;
@@ -25,15 +33,86 @@ export function subscribeAlerting(fn) {
   return () => listeners.delete(fn);
 }
 
-function getCtx() {
-  if (!ctx) {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) return null;
-    ctx = new Ctx();
-  }
-  // Browsers suspend the context until a user gesture — resume on each use.
-  if (ctx.state === 'suspended') ctx.resume();
+// ── Blocked state (browser won't let us play until the user interacts) ────────
+let blocked = false;
+const blockedListeners = new Set();
+function setBlocked(v) {
+  if (v === blocked) return;
+  blocked = v;
+  blockedListeners.forEach((fn) => { try { fn(v); } catch {} });
+}
+/** True when the browser is holding the audio context suspended. */
+export function isSoundBlocked() { return blocked; }
+/** Subscribe to blocked on/off changes. Returns an unsubscribe fn. */
+export function subscribeSoundBlocked(fn) {
+  blockedListeners.add(fn);
+  return () => blockedListeners.delete(fn);
+}
+
+function createCtx() {
+  if (ctx) return ctx;
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return null;
+  ctx = new Ctx();
   return ctx;
+}
+
+/**
+ * Get a running context, waiting for resume() to actually finish.
+ * Returns null when audio is unavailable or the browser still refuses.
+ */
+async function getRunningCtx() {
+  const ac = createCtx();
+  if (!ac) return null;
+
+  if (ac.state === 'suspended') {
+    try {
+      await ac.resume();
+    } catch {
+      // Refused — needs a user gesture first.
+    }
+  }
+
+  const ok = ac.state === 'running';
+  setBlocked(!ok);
+  return ok ? ac : null;
+}
+
+/**
+ * Warm up audio on the user's first gesture, which is the only moment the
+ * browser lets us. Call once when the panel mounts; the listeners remove
+ * themselves as soon as the context is running.
+ */
+export function installAudioUnlock() {
+  const events = ['pointerdown', 'keydown', 'touchstart'];
+
+  const onGesture = async () => {
+    const ac = await getRunningCtx();
+    if (!ac) return; // still refused — keep listening for the next gesture
+
+    // A silent blip finishes the unlock on stricter engines (older Safari).
+    try {
+      const buf = ac.createBuffer(1, 1, 22050);
+      const src = ac.createBufferSource();
+      src.buffer = buf;
+      src.connect(ac.destination);
+      src.start(0);
+    } catch {}
+
+    events.forEach((e) => document.removeEventListener(e, onGesture));
+  };
+
+  events.forEach((e) => document.addEventListener(e, onGesture, { passive: true }));
+
+  // Also report the current state so the UI can prompt right away.
+  getRunningCtx();
+}
+
+/** Ask the browser for audio again — call it from a click handler. */
+export async function unlockSound() {
+  const ac = await getRunningCtx();
+  if (ac) chime('order');
+  return !!ac;
 }
 
 // One chime = a short sequence of [frequency, startOffset(s), duration(s), peakGain]
@@ -48,10 +127,12 @@ const PATTERNS = {
   ],
 };
 
-function chime(kind) {
+async function chime(kind) {
   try {
-    const ac = getCtx();
+    const ac = await getRunningCtx();
     if (!ac) return;
+    // Read the clock only once the context is running — a suspended context's
+    // currentTime does not advance, so notes scheduled off it never sound.
     const t0 = ac.currentTime;
     const pattern = PATTERNS[kind] || PATTERNS.order;
     pattern.forEach(([freq, offset, dur, peak = 0.4]) => {
@@ -66,8 +147,10 @@ function chime(kind) {
       osc.start(t0 + offset);
       osc.stop(t0 + offset + dur);
     });
-  } catch {
-    // Web Audio unavailable — silently skip
+  } catch (err) {
+    // Never let a failed chime break the caller — but leave a trace, silence
+    // with no explanation is exactly what made this hard to diagnose before.
+    console.warn('[alertSound] chime failed:', err);
   }
 }
 
