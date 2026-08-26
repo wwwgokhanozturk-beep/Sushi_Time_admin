@@ -78,17 +78,33 @@ async function getRunningCtx() {
   return ok ? ac : null;
 }
 
+let unlockInstalled = false;
+
 /**
- * Warm up audio on the user's first gesture, which is the only moment the
- * browser lets us. Call once when the panel mounts; the listeners remove
- * themselves as soon as the context is running.
+ * Keep audio warm. A browser only lets us start the context during a user
+ * gesture, so every click and keypress is treated as a chance to (re)start it.
+ *
+ * The listeners deliberately stay attached for the whole session. A context
+ * that is running now can be suspended again later — the tab sits in the
+ * background for a long stretch, the machine sleeps, the audio device changes
+ * when headphones or a speaker are plugged in. Removing the listeners after
+ * the first success left the panel silent for good in those cases: resume()
+ * is refused without a fresh gesture, so the only ways back were noticing the
+ * "Ses kapalı" button or reloading the page. Now any click anywhere restores
+ * the sound by itself.
  */
 export function installAudioUnlock() {
+  if (unlockInstalled) return; // idempotent — StrictMode mounts effects twice
+  unlockInstalled = true;
+
   const events = ['pointerdown', 'keydown', 'touchstart'];
 
   const onGesture = async () => {
+    const needsWarmup = !ctx || ctx.state !== 'running';
+    // Always ask, so `blocked` (and the "Ses kapalı" button) tracks reality
+    // even when the context recovered on its own.
     const ac = await getRunningCtx();
-    if (!ac) return; // still refused — keep listening for the next gesture
+    if (!ac || !needsWarmup) return; // still refused, or nothing to warm up
 
     // A silent blip finishes the unlock on stricter engines (older Safari).
     try {
@@ -98,11 +114,16 @@ export function installAudioUnlock() {
       src.connect(ac.destination);
       src.start(0);
     } catch {}
-
-    events.forEach((e) => document.removeEventListener(e, onGesture));
   };
 
   events.forEach((e) => document.addEventListener(e, onGesture, { passive: true }));
+
+  // Returning to the tab is its own chance to recover: a context suspended
+  // while hidden can usually be resumed once the page is visible again, which
+  // saves the operator from having to click before the next order lands.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) getRunningCtx();
+  });
 
   // Also report the current state so the UI can prompt right away.
   getRunningCtx();

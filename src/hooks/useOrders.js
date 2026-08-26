@@ -31,9 +31,15 @@ export function useOrders(params = {}) {
   useSocket({
     'order:new': (order) => {
       qc.invalidateQueries({ queryKey: ['orders'] });
-      const orderId = String(order?._id || '').slice(-6).toUpperCase();
-      if (!seenOrderIds.current.has(order?._id)) {
-        seenOrderIds.current.add(order?._id);
+      // The server sends { orderId, customerName, totalPrice, ... }, not a whole
+      // order document. Reading `_id` gave undefined for every event, so no id
+      // was ever recorded as seen: the 30s poll below then counted the order as
+      // missed and rang a second time, and the toast showed the tail of the
+      // string "undefined" ("#EFINED") instead of the order number.
+      const id = order?.orderId;
+      const orderId = String(id || '').slice(-6).toUpperCase();
+      if (id && !seenOrderIds.current.has(id)) {
+        seenOrderIds.current.add(id);
         toast.success(
           `🔔 Yeni sipariş #${orderId || '???'} \u2014 ${order?.totalPrice ?? ''} ₺`,
           { duration: 8000, style: { maxWidth: 380 } }
