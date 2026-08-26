@@ -20,6 +20,7 @@ const EMPTY = {
   imageScale: 1, imageOffsetX: 0, imageOffsetY: 0,
   badge: '',
   discountPercent: '',
+  durationSec: '',
   promoCode: '',
   validFrom: '',
   validTo: '',
@@ -58,6 +59,7 @@ export default function PromotionFormPage() {
         imageOffsetY: existing.imageOffsetY ?? 0,
         badge:    existing.badge    || '',
         discountPercent: existing.discountPercent != null ? String(existing.discountPercent) : '',
+        durationSec: existing.durationSec != null ? String(existing.durationSec) : '',
         promoCode: existing.promoCode || '',
         validFrom: toInputDate(existing.validFrom),
         validTo:   toInputDate(existing.validTo),
@@ -76,6 +78,11 @@ export default function PromotionFormPage() {
     const errs = {};
     if (form.discountPercent !== '' && (isNaN(form.discountPercent) || Number(form.discountPercent) < 0 || Number(form.discountPercent) > 100))
       errs.discountPercent = '0–100 arası olmalı';
+    // Boş bırakılabilir: uygulama kendi varsayılanını (6 sn) kullanır.
+    // Sınırlar sunucudakiyle aynı — 2 sn altı göz kırpması, 60 sn üstü
+    // karuseli durdurmuş gibi görünür.
+    if (form.durationSec !== '' && (isNaN(form.durationSec) || Number(form.durationSec) < 2 || Number(form.durationSec) > 60))
+      errs.durationSec = '2–60 saniye arası olmalı';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -97,6 +104,7 @@ export default function PromotionFormPage() {
       imageOffsetY: form.imageOffsetY,
       badge:     form.badge || null,
       discountPercent: form.discountPercent !== '' ? Number(form.discountPercent) : null,
+      durationSec: form.durationSec !== '' ? Number(form.durationSec) : null,
       promoCode: form.promoCode.trim().toUpperCase(),
       validFrom: form.validFrom || null,
       validTo:   form.validTo   || null,
@@ -225,6 +233,20 @@ export default function PromotionFormPage() {
                   inputProps={{ min: 0, max: 100, step: 1 }}
                   InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
                   placeholder="10" />
+              </Grid>
+
+              {/* Slayt süresi: bu görsel/video karuselde kaç saniye kalacak.
+                  Boş bırakılırsa uygulama varsayılanı (6 sn) geçerli olur —
+                  eskiden tüm slaytlar sabit 6 saniyeydi, bu yüzden kısa bir
+                  video tekrar başlıyor, uzun olan ise yarıda kesiliyordu. */}
+              <Grid item xs={12} sm={6}>
+                <TextField fullWidth label="Gösterim süresi" value={form.durationSec}
+                  onChange={set('durationSec')} type="number"
+                  error={!!errors.durationSec}
+                  helperText={errors.durationSec || 'Boş = 6 sn (varsayılan)'}
+                  inputProps={{ min: 2, max: 60, step: 1 }}
+                  InputProps={{ endAdornment: <InputAdornment position="end">sn</InputAdornment> }}
+                  placeholder="6" />
               </Grid>
 
               {/* Promo code */}
