@@ -41,12 +41,12 @@ const PrintReceipt = forwardRef(function PrintReceipt({ order, contactNumber }, 
 
       {/* ── Bilgi tablosu ── */}
       <div style={s.box}>
-        <div style={s.row}>Sushi Time Contact Number : {contactNumber || '—'}</div>
-        <div style={{ ...s.row, ...s.kv }}>
+        <div style={{ ...s.row, ...s.contactRow }}>Sushi Time Contact Number : {contactNumber || '—'}</div>
+        <div style={{ ...s.row, ...s.kv, ...s.contactRow }}>
           <span>Müşteri:</span>
           <strong>{order.customerName || '—'}</strong>
         </div>
-        <div style={{ ...s.row, ...s.kv }}>
+        <div style={{ ...s.row, ...s.kv, ...s.contactRow }}>
           <span>Telefon:</span>
           <strong>{order.phone || '—'}</strong>
         </div>
@@ -141,6 +141,13 @@ const s = {
     padding: '1mm 1.5mm',
     borderBottom: '1px solid #000',
     wordBreak: 'break-word',
+  },
+  // İletişim, müşteri adı ve telefon — adres gibi büyütüldü
+  // (kuryenin kolay okuması için). Ödeme / sipariş no / saat satırları
+  // s.row'un kendi boyutunda kalır.
+  contactRow: {
+    fontSize: 14,
+    lineHeight: 1.35,
   },
   // Adres — daha büyük ve kalın (kuryenin kolay okuması için)
   addressRow: {
