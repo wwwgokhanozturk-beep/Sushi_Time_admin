@@ -13,11 +13,21 @@ import { useParams, useNavigate } from 'react-router-dom';
 
 const BADGES = ['', 'HOT', 'NEW', 'SALE', 'LIMITED'];
 
+// Кадрирование баннера — отдельно для каждой рамки. Рамки совпадают с сайтом
+// и приложением: телефон 50:31 (web slideMobile, mobile_rn CARD_ASPECT),
+// компьютер 12:5 (web slide). Поля image* — телефон (их читают и старые
+// версии приложения), desktopImage* — компьютер.
+const FRAMES = [
+  { label: 'Telefon',    aspect: '50 / 31', maxWidth: 420, keys: ['imageScale', 'imageOffsetX', 'imageOffsetY'] },
+  { label: 'Bilgisayar', aspect: '12 / 5',  maxWidth: undefined, keys: ['desktopImageScale', 'desktopImageOffsetX', 'desktopImageOffsetY'] },
+];
+
 const EMPTY = {
   title: '', title_ru: '', title_tr: '',
   description: '', description_ru: '', description_tr: '',
   imageUrl: '',
   imageScale: 1, imageOffsetX: 0, imageOffsetY: 0,
+  desktopImageScale: 1, desktopImageOffsetX: 0, desktopImageOffsetY: 0,
   badge: '',
   discountPercent: '',
   durationSec: '',
@@ -43,6 +53,9 @@ export default function PromotionFormPage() {
   const [form, setForm]     = useState(EMPTY);
   const [errors, setErrors] = useState({});
   const [langTab, setLangTab] = useState(0); // 0=EN, 1=RU, 2=TR
+  const [frameTab, setFrameTab] = useState(0); // 0=Telefon, 1=Bilgisayar
+  const frame = FRAMES[frameTab];
+  const [scaleKey, offsetXKey, offsetYKey] = frame.keys;
 
   useEffect(() => {
     if (existing) {
@@ -57,6 +70,9 @@ export default function PromotionFormPage() {
         imageScale:   existing.imageScale   ?? 1,
         imageOffsetX: existing.imageOffsetX ?? 0,
         imageOffsetY: existing.imageOffsetY ?? 0,
+        desktopImageScale:   existing.desktopImageScale   ?? 1,
+        desktopImageOffsetX: existing.desktopImageOffsetX ?? 0,
+        desktopImageOffsetY: existing.desktopImageOffsetY ?? 0,
         badge:    existing.badge    || '',
         discountPercent: existing.discountPercent != null ? String(existing.discountPercent) : '',
         durationSec: existing.durationSec != null ? String(existing.durationSec) : '',
@@ -102,6 +118,9 @@ export default function PromotionFormPage() {
       imageScale:   form.imageScale,
       imageOffsetX: form.imageOffsetX,
       imageOffsetY: form.imageOffsetY,
+      desktopImageScale:   form.desktopImageScale,
+      desktopImageOffsetX: form.desktopImageOffsetX,
+      desktopImageOffsetY: form.desktopImageOffsetY,
       badge:     form.badge || null,
       discountPercent: form.discountPercent !== '' ? Number(form.discountPercent) : null,
       durationSec: form.durationSec !== '' ? Number(form.durationSec) : null,
@@ -192,13 +211,20 @@ export default function PromotionFormPage() {
               {(form.imageUrl || form.title) && (
                 <Grid item xs={12}>
                   <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block' }}>
-                    Sitede nasıl görünür (banner) — sürükleyerek konumlandırın
+                    Bannerın nasıl görüneceği — sürükleyerek konumlandırın. Telefon ve bilgisayar ayrı ayarlanır.
                   </Typography>
+                  <Tabs value={frameTab} onChange={(_, v) => setFrameTab(v)} sx={{ mb: 1, minHeight: 36 }}>
+                    {FRAMES.map((f) => (
+                      <Tab key={f.label} label={f.label} sx={{ minHeight: 36, py: 0.5 }} />
+                    ))}
+                  </Tabs>
                   <PromoBannerPreview
                     imageUrl={form.imageUrl}
-                    scale={form.imageScale}
-                    offsetX={form.imageOffsetX}
-                    offsetY={form.imageOffsetY}
+                    aspect={frame.aspect}
+                    maxWidth={frame.maxWidth}
+                    scale={form[scaleKey]}
+                    offsetX={form[offsetXKey]}
+                    offsetY={form[offsetYKey]}
                     badge={form.badge}
                     title={prevTitle}
                     description={prevDesc}
@@ -206,9 +232,9 @@ export default function PromotionFormPage() {
                     onChange={({ scale, offsetX, offsetY }) =>
                       setForm((prev) => ({
                         ...prev,
-                        ...(scale     !== undefined && { imageScale:   scale }),
-                        ...(offsetX   !== undefined && { imageOffsetX: offsetX }),
-                        ...(offsetY   !== undefined && { imageOffsetY: offsetY }),
+                        ...(scale   !== undefined && { [scaleKey]:   scale }),
+                        ...(offsetX !== undefined && { [offsetXKey]: offsetX }),
+                        ...(offsetY !== undefined && { [offsetYKey]: offsetY }),
                       }))
                     }
                   />

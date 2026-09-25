@@ -6,6 +6,10 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 // Мини-копия промо-баннера из веб-клиента (web_client BannerCarousel).
 // Показывает админу, как кампания выглядит на сайте — с тем же кадрированием
 // (scale/offset), градиентом, бейджем, заголовком, описанием и чипом скидки.
+//
+// `aspect` — рамка, под которую кадрируют: на телефоне (сайт и приложение)
+// баннер 50:31, на компьютере 12:5. Один и тот же зум в них выглядит по-разному,
+// поэтому у акции два набора кадрирования и превью показывает нужную рамку.
 
 const PRIMARY = '#E8181B';   // web_client --primary
 const SECONDARY = '#FF6B35'; // web_client --secondary
@@ -17,6 +21,7 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 export default function PromoBannerPreview({
   imageUrl, scale = 1, offsetX = 0, offsetY = 0,
+  aspect = '12 / 5', maxWidth,
   badge, title, description, discountPercent,
   onChange,
 }) {
@@ -27,7 +32,7 @@ export default function PromoBannerPreview({
   const showVideo = isVideo(imageUrl) || imgFailed;
 
   // Перетаскивание прямо по баннеру меняет смещение (в % от размеров баннера).
-  // Делит сдвиг на реальные ширину/высоту, т.к. баннер 3:1 (не квадрат).
+  // Делит сдвиг на реальные ширину/высоту, т.к. баннер не квадрат.
   const frameRef = useRef(null);
   const dragRef = useRef(null); // { startX, startY, baseX, baseY, w, h }
   const [dragging, setDragging] = useState(false);
@@ -64,6 +69,9 @@ export default function PromoBannerPreview({
   };
   const badgeColor = badge ? BADGE_COLORS[badge] : null;
   const hasDiscount = discountPercent != null && discountPercent !== '';
+  // Затемнение нужно только под текстом: имиджевый баннер без подписи
+  // с ним выглядит приглушённым. Так же делают сайт и приложение.
+  const hasText = Boolean(badge || title || description || hasDiscount);
 
   return (
     <Box>
@@ -76,15 +84,19 @@ export default function PromoBannerPreview({
         onPointerLeave={endDrag}
         style={{
           ...st.wrap,
+          aspectRatio: aspect,
+          maxWidth,
           cursor: interactive ? (dragging ? 'grabbing' : 'grab') : 'default',
           touchAction: interactive ? 'none' : 'auto',
         }}
       >
         {imageUrl ? (
           <>
-            {/* Размытая подложка того же фото — заполняет баннер, пока фото
-                показывается целиком (contain). Для видео не нужна. */}
-            {!showVideo && (
+            {/* Размытая подложка того же медиа — заполняет края, которые
+                оставляет contain, и у фото, и у видео. */}
+            {showVideo ? (
+              <video src={imageUrl} style={st.backdropVideo} autoPlay muted loop playsInline aria-hidden />
+            ) : (
               <div style={{ ...st.backdrop, backgroundImage: `url("${imageUrl}")` }} />
             )}
             {showVideo ? (
@@ -97,7 +109,7 @@ export default function PromoBannerPreview({
           <div style={st.placeholder}>🍣</div>
         )}
 
-        <div style={st.overlay} />
+        {hasText && <div style={st.overlay} />}
 
         <div style={st.content}>
           {badge ? <span style={{ ...st.badge, background: badgeColor }}>{badge}</span> : null}
@@ -113,7 +125,7 @@ export default function PromoBannerPreview({
           <ZoomInIcon fontSize="small" sx={{ color: 'text.secondary', flexShrink: 0 }} />
           <Slider
             value={scale}
-            min={0.5} max={3} step={0.05}
+            min={0.5} max={5} step={0.05}
             onChange={(_, v) => onChange?.({ scale: v })}
             sx={{ flex: 1 }}
           />
@@ -132,10 +144,10 @@ export default function PromoBannerPreview({
   );
 }
 
-// Стили — мини-версия web_client BannerCarousel (пропорции 3:1, кегли ~0.56×).
+// Стили — мини-версия web_client BannerCarousel (кегли ~0.56×).
 const st = {
   wrap: {
-    position: 'relative', width: '100%', aspectRatio: '3 / 1', minHeight: 140,
+    position: 'relative', width: '100%', minHeight: 140, margin: '0 auto',
     borderRadius: 16, overflow: 'hidden', background: '#FDECEA',
     boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
     userSelect: 'none',
@@ -149,6 +161,10 @@ const st = {
     position: 'absolute', inset: 0, zIndex: 0,
     backgroundSize: 'cover', backgroundPosition: 'center',
     filter: 'blur(20px)', transform: 'scale(1.15)', pointerEvents: 'none',
+  },
+  backdropVideo: {
+    position: 'absolute', inset: 0, zIndex: 0, width: '100%', height: '100%',
+    objectFit: 'cover', filter: 'blur(20px)', transform: 'scale(1.15)', pointerEvents: 'none',
   },
   overlay: {
     position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
