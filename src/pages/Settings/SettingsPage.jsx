@@ -13,6 +13,7 @@ import PageLayout from '@/components/layout/PageLayout';
 import { settingsService } from '@/services/settingsService';
 import BusinessHoursCard from './components/BusinessHoursCard';
 import DistrictMinimumsCard from './components/DistrictMinimumsCard';
+import AppVersionCard from './components/AppVersionCard';
 
 export default function SettingsPage() {
   // ── İletişim ─────────────────────────────────────────────────────────────
@@ -210,6 +211,9 @@ export default function SettingsPage() {
             </Box>
           </CardContent>
         </Card>
+
+        {/* Mobil uygulama güncelleme daveti */}
+        <AppVersionCard />
 
         {/* Slayt gösterisi */}
         <Card>

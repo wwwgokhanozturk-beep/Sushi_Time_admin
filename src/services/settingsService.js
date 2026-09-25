@@ -17,4 +17,6 @@ export const settingsService = {
   updateDistrictMinimums: (minimums)  => api.put('/settings/district-minimums', { minimums }),
   getOrderTimer:    ()          => api.get('/settings/order-timer'),
   updateOrderTimer: (minutes)  => api.put('/settings/order-timer', { minutes }),
+  getAppVersion:    ()         => api.get('/settings/app-version'),
+  updateAppVersion: (data)     => api.put('/settings/app-version', data),
 };
