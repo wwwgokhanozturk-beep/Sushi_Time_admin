@@ -20,6 +20,7 @@ import KeyboardArrowUpIcon   from '@mui/icons-material/KeyboardArrowUp';
 import PageLayout     from '@/components/layout/PageLayout';
 import OrderStatusBadge from './components/OrderStatusBadge';
 import DriverAssignCard from './components/DriverAssignCard';
+import OrderChatButton from './components/OrderChatButton';
 import { useQuery } from '@tanstack/react-query';
 import { useOrders, useDeleteOrder, useUpdateOrderStatus, useCancelOrder }  from '@/hooks/useOrders';
 import { orderService } from '@/services/orderService';
@@ -514,6 +515,7 @@ export default function OrdersPage() {
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
+                      <OrderChatButton order={order} />
                       <Tooltip title="Yazdır (Fiş)">
                         <IconButton size="small" onClick={(e) => handlePrint(e, order)}>
                           <PrintIcon fontSize="small" />

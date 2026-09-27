@@ -13,6 +13,7 @@ import PageLayout    from '@/components/layout/PageLayout';
 import OrderStatusBadge from './components/OrderStatusBadge';
 import { useOrder, useUpdateOrderStatus, useCancelOrder } from '@/hooks/useOrders';
 import DriverAssignCard from './components/DriverAssignCard';
+import OrderChatButton from './components/OrderChatButton';
 import { usePrintReceipt } from '@/hooks/usePrintReceipt';
 import { useContactSettings } from '@/hooks/useSettings';
 import { formatPrice } from '@/utils/formatters';
@@ -204,7 +205,10 @@ export default function OrderDetailPage() {
             {/* Customer */}
             <Card>
               <CardContent>
-                <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>Müşteri</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Müşteri</Typography>
+                  <OrderChatButton order={order} variant="button" />
+                </Box>
                 <Row label="Ad" value={order.customerName} />
                 <Row label="Telefon" value={order.phone} />
                 <Row label="Bölge" value={order.district} />

@@ -104,18 +104,44 @@ export default function ChatPage() {
     }
   }, [selectedThread, markThreadRead, queryClient]);
 
-  // Auto-select thread when arriving from the chat notification bell
+  // Auto-select thread when arriving from the chat notification bell or from
+  // an order ("Sohbet" button). The thread may not be in the loaded page — a
+  // brand-new empty one, or one older than the latest 100 — so fetch it
+  // directly then and put it on top of the list.
   useEffect(() => {
     const wantedId = searchParams.get('threadId');
-    if (!wantedId || !threads.length) return;
-    if (selectedThread?._id === wantedId) return;
+    if (!wantedId || threadsLoading) return undefined;
+    // Clear the param so re-selecting another thread works normally
+    const clearParam = () => setSearchParams({}, { replace: true });
+    if (selectedThread?._id === wantedId) { clearParam(); return undefined; }
+
     const match = threads.find((t) => t._id === wantedId);
     if (match) {
       setSelectedThread(match);
-      // Clear the param so re-selecting another thread works normally
-      setSearchParams({}, { replace: true });
+      clearParam();
+      return undefined;
     }
-  }, [searchParams, threads, selectedThread?._id, setSearchParams]);
+
+    let cancelled = false;
+    chatService.getMessages(wantedId)
+      .then((res) => {
+        if (cancelled) return;
+        const { thread, messages: loaded } = res.data.data;
+        queryClient.setQueryData(['chatThreads'], (old) => ({
+          ...(old || {}),
+          threads: [thread, ...(old?.threads || []).filter((t) => t._id !== thread._id)],
+        }));
+        queryClient.setQueryData(['chatMessages', thread._id], { thread, messages: loaded });
+        setSelectedThread(thread);
+        clearParam();
+      })
+      .catch(() => {
+        if (cancelled) return;
+        notifyRef.current.error('Sohbet bulunamadı');
+        clearParam();
+      });
+    return () => { cancelled = true; };
+  }, [searchParams, threads, threadsLoading, selectedThread?._id, setSearchParams, queryClient]);
 
   useEffect(() => {
     if (!token) return undefined;
@@ -154,6 +180,18 @@ export default function ChatPage() {
       } else if (message.sender === 'customer') {
         notifyRef.current.info(`${getCustomerName(thread)} yeni mesaj gönderdi`);
       }
+    });
+
+    // A thread was deleted (by this or another admin) — drop it from the list,
+    // its unread badge and, if it's the one open, the conversation pane.
+    socket.on('chat:thread_deleted', ({ threadId }) => {
+      const qc = queryClientRef.current;
+      qc.setQueryData(['chatThreads'], (old) => (old
+        ? { ...old, threads: (old.threads || []).filter((t) => t._id !== threadId) }
+        : old));
+      qc.removeQueries({ queryKey: ['chatMessages', threadId] });
+      useChatNotificationStore.getState().markThreadRead(threadId);
+      if (selectedThreadRef.current?._id === threadId) setSelectedThread(null);
     });
 
     socket.on('connect_error', (err) => {
