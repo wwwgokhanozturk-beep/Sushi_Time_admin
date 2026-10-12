@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import useSocket from '@/hooks/useSocket';
 import toast from 'react-hot-toast';
 import { startAlert, stopAlert } from '@/utils/alertSound';
+import { PLATFORM_LABELS } from '@/utils/constants';
 
 export default function NotificationBell() {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -19,7 +20,8 @@ export default function NotificationBell() {
   const handlers = useMemo(() => ({
     'order:new': (data) => {
       add(
-        `Yeni sipariş: ${data.customerName} — ${data.totalPrice} ₺`,
+        `Yeni sipariş: ${data.customerName} — ${data.totalPrice} ₺`
+          + (PLATFORM_LABELS[data.platform] ? ` · ${PLATFORM_LABELS[data.platform]}` : ''),
         'order',
         { orderId: data.orderId }
       );

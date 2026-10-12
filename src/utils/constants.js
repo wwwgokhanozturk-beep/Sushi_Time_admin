@@ -25,6 +25,13 @@ export const STATUS_LABELS = {
   cancelled: "İptal Edildi",
 };
 
+// Where the customer placed the order (order.platform, set by the server).
+export const PLATFORM_LABELS = {
+  ios: "iOS",
+  android: "Android",
+  web: "Web sitesi",
+};
+
 export const MENU_CATEGORIES = [
   "rolls",
   "sets",

@@ -19,6 +19,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon   from '@mui/icons-material/KeyboardArrowUp';
 import PageLayout     from '@/components/layout/PageLayout';
 import OrderStatusBadge from './components/OrderStatusBadge';
+import OrderPlatformChip, { OrderPlatformIcon } from './components/OrderPlatformChip';
 import DriverAssignCard from './components/DriverAssignCard';
 import OrderChatButton from './components/OrderChatButton';
 import { useQuery } from '@tanstack/react-query';
@@ -27,7 +28,7 @@ import { orderService } from '@/services/orderService';
 import { usePrintReceipt } from '@/hooks/usePrintReceipt';
 import { useContactSettings, useOrderTimerSetting } from '@/hooks/useSettings';
 import { formatPrice } from '@/utils/formatters';
-import { ORDER_STATUSES, STATUS_LABELS, STATUS_COLORS } from '@/utils/constants';
+import { ORDER_STATUSES, STATUS_LABELS, STATUS_COLORS, PLATFORM_LABELS } from '@/utils/constants';
 import { buildMapsUrl, isGpsPin } from '@/utils/maps';
 import dayjs from 'dayjs';
 import * as XLSX from 'xlsx';
@@ -115,6 +116,7 @@ function OrderExpandedDetails({ order, contact, printReceipt }) {
   return (
     <Box sx={{ p: 2, bgcolor: '#F9FAFB' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
+        <OrderPlatformChip platform={order.platform} />
         {order.loyaltyDiscountApplied && (
           <Chip label="🎉 Sadakat indirimi" color="success" size="small" variant="outlined" />
         )}
@@ -359,6 +361,7 @@ export default function OrdersPage() {
       'Toplam (\u20BA)':  Number(o.totalPrice ?? 0),
       'Durum':       STATUS_LABELS[o.status] || o.status || '',
       '\u00D6deme':       o.paymentMethod === 'card' ? 'Kart' : 'Nakit',
+      'Platform':    PLATFORM_LABELS[o.platform] || '',
       'Adres':       o.address || '',
       'Tarih':       dayjs(o.createdAt).format('DD.MM.YYYY HH:mm'),
     }));
@@ -367,7 +370,7 @@ export default function OrdersPage() {
     // Column widths so everything lines up cleanly.
     ws['!cols'] = [
       { wch: 12 }, { wch: 24 }, { wch: 16 }, { wch: 11 }, { wch: 12 },
-      { wch: 15 }, { wch: 8 },  { wch: 36 }, { wch: 18 },
+      { wch: 15 }, { wch: 8 },  { wch: 11 }, { wch: 36 }, { wch: 18 },
     ];
     // Freeze the header row.
     ws['!freeze'] = { xSplit: 0, ySplit: 1 };
@@ -487,7 +490,10 @@ export default function OrdersPage() {
                     </IconButton>
                   </TableCell>
                   <TableCell sx={{ fontFamily: 'monospace', fontSize: 12 }}>
-                    #{order._id?.slice(-6).toUpperCase()}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                      <OrderPlatformIcon platform={order.platform} />
+                      #{order._id?.slice(-6).toUpperCase()}
+                    </Box>
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>{order.customerName}</TableCell>
                   <TableCell>{order.phone}</TableCell>

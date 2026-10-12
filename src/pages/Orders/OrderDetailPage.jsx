@@ -11,6 +11,7 @@ import CancelIcon    from '@mui/icons-material/Cancel';
 import RoomIcon      from '@mui/icons-material/Room';
 import PageLayout    from '@/components/layout/PageLayout';
 import OrderStatusBadge from './components/OrderStatusBadge';
+import OrderPlatformChip from './components/OrderPlatformChip';
 import { useOrder, useUpdateOrderStatus, useCancelOrder } from '@/hooks/useOrders';
 import DriverAssignCard from './components/DriverAssignCard';
 import OrderChatButton from './components/OrderChatButton';
@@ -97,6 +98,7 @@ export default function OrderDetailPage() {
         </Tooltip>
         <Typography variant="h5" sx={{ fontWeight: 800, fontFamily: 'monospace' }}>#{shortId}</Typography>
         <OrderStatusBadge status={order.status} />
+        <OrderPlatformChip platform={order.platform} />
         {order.loyaltyDiscountApplied && (
           <Chip label="🎉 Sadakat indirimi" color="success" size="small" variant="outlined" />
         )}

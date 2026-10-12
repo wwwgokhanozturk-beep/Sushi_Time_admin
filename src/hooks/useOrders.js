@@ -4,6 +4,10 @@ import { orderService } from '@/services/orderService';
 import useSocket from './useSocket';
 import toast from 'react-hot-toast';
 import { startAlert } from '@/utils/alertSound';
+import { PLATFORM_LABELS } from '@/utils/constants';
+
+// " · iOS" after the amount in new-order toasts; nothing for unknown sources.
+const platformSuffix = (platform) => (PLATFORM_LABELS[platform] ? ` · ${PLATFORM_LABELS[platform]}` : '');
 
 // An order older than this was not "just placed" — it showed up because the
 // operator switched a filter, and must not set off the alarm.
@@ -41,7 +45,7 @@ export function useOrders(params = {}) {
       if (id && !seenOrderIds.current.has(id)) {
         seenOrderIds.current.add(id);
         toast.success(
-          `🔔 Yeni sipariş #${orderId || '???'} \u2014 ${order?.totalPrice ?? ''} ₺`,
+          `🔔 Yeni sipariş #${orderId || '???'} \u2014 ${order?.totalPrice ?? ''} ₺${platformSuffix(order?.platform)}`,
           { duration: 8000, style: { maxWidth: 380 } }
         );
       }
@@ -75,7 +79,7 @@ export function useOrders(params = {}) {
     startAlert('order');
     missed.forEach((order) => {
       toast.success(
-        `🔔 Yeni sipariş #${order._id.slice(-6).toUpperCase()} — ${order.totalPrice ?? ''} ₺`,
+        `🔔 Yeni sipariş #${order._id.slice(-6).toUpperCase()} — ${order.totalPrice ?? ''} ₺${platformSuffix(order.platform)}`,
         { duration: 8000, style: { maxWidth: 380 } },
       );
     });
