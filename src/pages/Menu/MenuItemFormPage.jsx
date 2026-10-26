@@ -20,7 +20,7 @@ const MAX_IMAGES = 3;
 const EMPTY = {
   name: '', name_ru: '', name_tr: '', category: 'rolls', price: '',
   images: [], imageUrl: '', imageScale: 1, imageOffsetX: 0, imageOffsetY: 0,
-  preparationTime: '15', calories: '0', isAvailable: true,
+  preparationTime: '15', calories: '0', protein: '0', isAvailable: true,
   stock: '',   // '' = unlimited (null); number = tracked quantity
   // per-language fields
   description:    '',
@@ -97,6 +97,7 @@ export default function MenuItemFormPage() {
         ingredients_tr: (existing.ingredients_tr || []).join(', '),
         preparationTime: String(existing.preparationTime ?? '15'),
         calories: String(existing.calories ?? '0'),
+        protein: String(existing.protein ?? '0'),
         isAvailable: existing.isAvailable ?? true,
         stock: existing.stock !== undefined && existing.stock !== null ? String(existing.stock) : '',
       });
@@ -144,6 +145,7 @@ export default function MenuItemFormPage() {
       ingredients_tr: splitCSV(form.ingredients_tr),
       preparationTime: Number(form.preparationTime) || 15,
       calories: Number(form.calories) || 0,
+      protein: Number(form.protein) || 0,
       isAvailable: form.isAvailable,
       stock: form.stock === '' ? null : Number(form.stock),
     };
@@ -355,16 +357,32 @@ export default function MenuItemFormPage() {
                 ) : null}
               </Grid>
 
-              {/* Prep time + Calories */}
+              {/* Besin değerleri — müşteri menü kartında ve ürün sayfasında görür */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" fontWeight={700}>
+                  Besin değerleri (1 porsiyon)
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Menüdeki kartta ve ürün sayfasında gösterilir. 0 bırakılan değer gösterilmez.
+                </Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth label="Kalori" value={form.calories}
+                  onChange={set('calories')} type="number" inputProps={{ min: '0' }}
+                  InputProps={{ endAdornment: <InputAdornment position="end">kcal</InputAdornment> }} />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth label="Protein" value={form.protein}
+                  onChange={set('protein')} type="number" inputProps={{ min: '0', step: '0.1' }}
+                  InputProps={{ endAdornment: <InputAdornment position="end">g</InputAdornment> }} />
+              </Grid>
+
+              {/* Prep time + availability */}
               <Grid item xs={6} sm={4}>
                 <TextField fullWidth label="Hazırlık Süresi (dk)" value={form.preparationTime}
                   onChange={set('preparationTime')} type="number" inputProps={{ min: '0' }} />
               </Grid>
-              <Grid item xs={6} sm={4}>
-                <TextField fullWidth label="Kalori" value={form.calories}
-                  onChange={set('calories')} type="number" inputProps={{ min: '0' }} />
-              </Grid>
-              <Grid item xs={12} sm={4} sx={{ display: 'flex', alignItems: 'center' }}>
+              <Grid item xs={6} sm={8} sx={{ display: 'flex', alignItems: 'center' }}>
                 <FormControlLabel
                   control={<Switch checked={form.isAvailable} onChange={set('isAvailable')} color="success" />}
                   label="Mevcut"
