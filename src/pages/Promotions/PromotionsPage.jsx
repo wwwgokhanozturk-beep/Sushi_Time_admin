@@ -103,7 +103,8 @@ export default function PromotionsPage() {
                   {/* Image */}
                   <Box sx={{ height: 130, bgcolor: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                     {promo.imageUrl ? (
-                      <Box component="img" src={promo.imageUrl} alt={promo.title}
+                      // thumbUrl — у видео это его первый кадр (img видео не покажет)
+                      <Box component="img" src={promo.thumbUrl || promo.imageUrl} alt={promo.title}
                         sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <Typography fontSize={44}>🎉</Typography>

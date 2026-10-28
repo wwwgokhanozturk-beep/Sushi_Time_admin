@@ -205,8 +205,9 @@ export default function MenuPage() {
                   {item.imageUrl ? (
                     <Box
                       component="img"
-                      src={item.imageUrl}
+                      src={item.thumbUrl || item.imageUrl}
                       alt={item.name}
+                      loading="lazy"
                       sx={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
                   ) : (

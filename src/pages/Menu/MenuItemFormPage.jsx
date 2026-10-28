@@ -249,8 +249,11 @@ export default function MenuItemFormPage() {
 
               {/* Fotoğraflar — en fazla MAX_IMAGES (menüde 5 sn'de bir geçer) */}
               <Grid item xs={12}>
-                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+                <Typography variant="subtitle2" fontWeight={700}>
                   Ürün fotoğrafları (en fazla {MAX_IMAGES}) — menüde 5 sn'de bir geçer
+                </Typography>
+                <Typography variant="caption" color="text.secondary" component="div" sx={{ mb: 1 }}>
+                  Fotoğraflar sunucuda otomatik olarak küçültülür — orijinal boyutta yükleyebilirsiniz.
                 </Typography>
 
                 {/* URL ile ekleme — birincil yöntem */}

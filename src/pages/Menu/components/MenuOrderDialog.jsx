@@ -102,7 +102,7 @@ export default function MenuOrderDialog({ open, onClose, items, categoryLabel })
                   {idx + 1}
                 </Typography>
                 {item.imageUrl && (
-                  <Box component="img" src={item.imageUrl} alt=""
+                  <Box component="img" src={item.thumbUrl || item.imageUrl} alt=""
                     sx={{ width: 36, height: 36, borderRadius: 1, objectFit: 'cover', flexShrink: 0 }} />
                 )}
                 <Typography fontWeight={600} sx={{ flex: 1 }} noWrap>{item.name}</Typography>
