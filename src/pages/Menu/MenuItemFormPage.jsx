@@ -3,6 +3,7 @@ import {
   Box, Card, CardContent, Grid, Typography, TextField, Button, IconButton,
   FormControl, InputLabel, Select, MenuItem, Switch, FormControlLabel,
   CircularProgress, Alert, Chip, InputAdornment, Tabs, Tab,
+  ToggleButton, ToggleButtonGroup,
 } from '@mui/material';
 import ArrowBackIcon  from '@mui/icons-material/ArrowBack';
 import SaveIcon       from '@mui/icons-material/Save';
@@ -20,7 +21,8 @@ const MAX_IMAGES = 3;
 const EMPTY = {
   name: '', name_ru: '', name_tr: '', category: 'rolls', price: '',
   images: [], imageUrl: '', imageScale: 1, imageOffsetX: 0, imageOffsetY: 0,
-  preparationTime: '15', calories: '0', protein: '0', isAvailable: true,
+  preparationTime: '15', calories: '0', protein: '0', fat: '0', carbs: '0',
+  weight: '0', pieces: '0', isAvailable: true,
   stock: '',   // '' = unlimited (null); number = tracked quantity
   // per-language fields
   description:    '',
@@ -30,6 +32,18 @@ const EMPTY = {
   ingredients_ru: '',
   ingredients_tr: '',
 };
+
+// The API stores nutrition per serving. The form also accepts it per 100 g
+// (labels and recipe calculators usually give it that way) and converts with
+// the serving weight: kcal to whole numbers, grams to one decimal.
+const NUTRIENTS = ['calories', 'protein', 'fat', 'carbs'];
+const scaleNutrients = (values, factor) => Object.fromEntries(
+  NUTRIENTS.map((key) => {
+    const v = (Number(values[key]) || 0) * factor;
+    return [key, key === 'calories' ? Math.round(v) : Math.round(v * 10) / 10];
+  }),
+);
+const trNumber = (v) => v.toLocaleString('tr-TR', { maximumFractionDigits: 1 });
 
 export default function MenuItemFormPage() {
   const { id }     = useParams();
@@ -42,6 +56,8 @@ export default function MenuItemFormPage() {
   const [form, setForm] = useState(EMPTY);
   const [errors, setErrors] = useState({});
   const [langTab, setLangTab] = useState(0); // 0=EN, 1=RU, 2=TR
+  // What the four nutrition fields currently mean: 'serving' or '100g'.
+  const [basis, setBasis] = useState('serving');
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef(null);
 
@@ -78,6 +94,7 @@ export default function MenuItemFormPage() {
 
   useEffect(() => {
     if (existing) {
+      setBasis('serving'); // the API sends per-serving values
       setForm({
         name: existing.name || '',
         name_ru: existing.name_ru || '',
@@ -98,6 +115,10 @@ export default function MenuItemFormPage() {
         preparationTime: String(existing.preparationTime ?? '15'),
         calories: String(existing.calories ?? '0'),
         protein: String(existing.protein ?? '0'),
+        fat: String(existing.fat ?? '0'),
+        carbs: String(existing.carbs ?? '0'),
+        weight: String(existing.weight ?? '0'),
+        pieces: String(existing.pieces ?? '0'),
         isAvailable: existing.isAvailable ?? true,
         stock: existing.stock !== undefined && existing.stock !== null ? String(existing.stock) : '',
       });
@@ -110,12 +131,33 @@ export default function MenuItemFormPage() {
     setErrors((prev) => ({ ...prev, [field]: '' }));
   };
 
+  // Switching the basis rescales the four numbers, so they still describe the
+  // same dish. Needs the serving weight; the 100 g button is disabled without it.
+  const switchBasis = (_, next) => {
+    const weight = Number(form.weight) || 0;
+    if (!next || next === basis || !(weight > 0)) return;
+    const scaled = scaleNutrients(form, next === '100g' ? 100 / weight : weight / 100);
+    setForm((prev) => ({
+      ...prev,
+      ...Object.fromEntries(NUTRIENTS.map((key) => [key, String(scaled[key])])),
+    }));
+    setBasis(next);
+  };
+
+  // The same values on the other basis, shown under the fields as a check.
+  const weightG = Number(form.weight) || 0;
+  const counterpart = weightG > 0 && NUTRIENTS.some((key) => Number(form[key]) > 0)
+    ? scaleNutrients(form, basis === '100g' ? weightG / 100 : 100 / weightG)
+    : null;
+
   const validate = () => {
     const errs = {};
     if (!form.name.trim())     errs.name     = 'Ad gerekli';
     if (!form.category)        errs.category  = 'Kategori gerekli';
     if (!form.price || isNaN(form.price) || Number(form.price) < 0)
       errs.price = 'Geçerli bir fiyat gerekli';
+    if (basis === '100g' && !(Number(form.weight) > 0))
+      errs.weight = '100 g değerlerini porsiyona çevirmek için ağırlık gerekli';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -125,6 +167,7 @@ export default function MenuItemFormPage() {
     if (!validate()) return;
 
     const splitCSV = (str) => str.split(',').map((s) => s.trim()).filter(Boolean);
+    const perServing = scaleNutrients(form, basis === '100g' ? Number(form.weight) / 100 : 1);
 
     const payload = {
       name: form.name.trim(),
@@ -144,8 +187,9 @@ export default function MenuItemFormPage() {
       ingredients_ru: splitCSV(form.ingredients_ru),
       ingredients_tr: splitCSV(form.ingredients_tr),
       preparationTime: Number(form.preparationTime) || 15,
-      calories: Number(form.calories) || 0,
-      protein: Number(form.protein) || 0,
+      ...perServing,
+      weight: Number(form.weight) || 0,
+      pieces: Math.round(Number(form.pieces)) || 0,
       isAvailable: form.isAvailable,
       stock: form.stock === '' ? null : Number(form.stock),
     };
@@ -360,14 +404,39 @@ export default function MenuItemFormPage() {
                 ) : null}
               </Grid>
 
-              {/* Besin değerleri — müşteri menü kartında ve ürün sayfasında görür */}
+              {/* Porsiyon ve besin değerleri — müşteri menüdeki ⓘ penceresinde ve ürün sayfasında görür */}
               <Grid item xs={12}>
                 <Typography variant="subtitle2" fontWeight={700}>
-                  Besin değerleri (1 porsiyon)
+                  Porsiyon ve besin değerleri
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Menüdeki kartta ve ürün sayfasında gösterilir. 0 bırakılan değer gösterilmez.
+                  Menüde (ⓘ bilgi penceresi) ve ürün sayfasında gösterilir. 0 bırakılan değer gösterilmez.
                 </Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth label="Porsiyon ağırlığı" value={form.weight}
+                  onChange={set('weight')} type="number" inputProps={{ min: '0' }}
+                  error={!!errors.weight} helperText={errors.weight}
+                  InputProps={{ endAdornment: <InputAdornment position="end">g</InputAdornment> }} />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth label="Parça sayısı" value={form.pieces}
+                  onChange={set('pieces')} type="number" inputProps={{ min: '0' }}
+                  InputProps={{ endAdornment: <InputAdornment position="end">adet</InputAdornment> }} />
+              </Grid>
+              <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+                <Typography variant="body2" color="text.secondary">Değerler:</Typography>
+                <ToggleButtonGroup size="small" exclusive color="primary" value={basis} onChange={switchBasis}>
+                  <ToggleButton value="serving" sx={{ px: 2, textTransform: 'none' }}>1 porsiyon için</ToggleButton>
+                  <ToggleButton value="100g" disabled={!(weightG > 0)} sx={{ px: 2, textTransform: 'none' }}>
+                    100 g için
+                  </ToggleButton>
+                </ToggleButtonGroup>
+                {!(weightG > 0) && (
+                  <Typography variant="caption" color="text.secondary">
+                    100 g için girmek üzere önce ağırlığı yazın
+                  </Typography>
+                )}
               </Grid>
               <Grid item xs={6}>
                 <TextField fullWidth label="Kalori" value={form.calories}
@@ -379,6 +448,30 @@ export default function MenuItemFormPage() {
                   onChange={set('protein')} type="number" inputProps={{ min: '0', step: '0.1' }}
                   InputProps={{ endAdornment: <InputAdornment position="end">g</InputAdornment> }} />
               </Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth label="Yağ" value={form.fat}
+                  onChange={set('fat')} type="number" inputProps={{ min: '0', step: '0.1' }}
+                  InputProps={{ endAdornment: <InputAdornment position="end">g</InputAdornment> }} />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField fullWidth label="Karbonhidrat" value={form.carbs}
+                  onChange={set('carbs')} type="number" inputProps={{ min: '0', step: '0.1' }}
+                  InputProps={{ endAdornment: <InputAdornment position="end">g</InputAdornment> }} />
+              </Grid>
+              {counterpart && (
+                <Grid item xs={12} sx={{ pt: '8px !important' }}>
+                  <Typography variant="caption" color="text.secondary">
+                    {basis === '100g' ? `1 porsiyonda (${trNumber(weightG)} g)` : '100 g’da'}:{' '}
+                    {[
+                      counterpart.calories > 0 && `${trNumber(counterpart.calories)} kcal`,
+                      counterpart.protein > 0 && `protein ${trNumber(counterpart.protein)} g`,
+                      counterpart.fat > 0 && `yağ ${trNumber(counterpart.fat)} g`,
+                      counterpart.carbs > 0 && `karbonhidrat ${trNumber(counterpart.carbs)} g`,
+                    ].filter(Boolean).join(' · ')}
+                    {basis === '100g' && ' — kayıtta bu değerler saklanır'}
+                  </Typography>
+                </Grid>
+              )}
 
               {/* Prep time + availability */}
               <Grid item xs={6} sm={4}>
