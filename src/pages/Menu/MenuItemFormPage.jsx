@@ -13,6 +13,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { MENU_CATEGORIES } from '@/utils/constants';
 import { menuService } from '@/services/menuService';
 import ImageFrameEditor from '@/components/ImageFrameEditor';
+import AllergenIcon from '@/components/AllergenIcon';
+import { ALLERGENS, ALLERGEN_LABELS } from '@/utils/allergens';
 import toast from 'react-hot-toast';
 
 const MAX_IMAGES = 3;
@@ -22,6 +24,7 @@ const EMPTY = {
   images: [], imageUrl: '', imageScale: 1, imageOffsetX: 0, imageOffsetY: 0,
   preparationTime: '15', calories: '0', protein: '0', fat: '0', carbs: '0',
   weight: '0', pieces: '0', isAvailable: true,
+  allergens: [], // codes from utils/allergens
   stock: '',   // '' = unlimited (null); number = tracked quantity
   // per-language fields
   description:    '',
@@ -103,6 +106,7 @@ export default function MenuItemFormPage() {
         carbs: String(existing.carbs ?? '0'),
         weight: String(existing.weight ?? '0'),
         pieces: String(existing.pieces ?? '0'),
+        allergens: existing.allergens || [],
         isAvailable: existing.isAvailable ?? true,
         stock: existing.stock !== undefined && existing.stock !== null ? String(existing.stock) : '',
       });
@@ -114,6 +118,15 @@ export default function MenuItemFormPage() {
     setForm((prev) => ({ ...prev, [field]: val }));
     setErrors((prev) => ({ ...prev, [field]: '' }));
   };
+
+  // Kept in the regulation's order, as the site and the app show them.
+  const toggleAllergen = (code) =>
+    setForm((prev) => ({
+      ...prev,
+      allergens: prev.allergens.includes(code)
+        ? prev.allergens.filter((a) => a !== code)
+        : ALLERGENS.filter((a) => a === code || prev.allergens.includes(a)),
+    }));
 
   const validate = () => {
     const errs = {};
@@ -155,6 +168,7 @@ export default function MenuItemFormPage() {
       carbs: Number(form.carbs) || 0,
       weight: Number(form.weight) || 0,
       pieces: Math.round(Number(form.pieces)) || 0,
+      allergens: form.allergens,
       isAvailable: form.isAvailable,
       stock: form.stock === '' ? null : Number(form.stock),
     };
@@ -407,6 +421,32 @@ export default function MenuItemFormPage() {
                 <TextField fullWidth label="Karbonhidrat" value={form.carbs}
                   onChange={set('carbs')} type="number" inputProps={{ min: '0', step: '0.1' }}
                   InputProps={{ endAdornment: <InputAdornment position="end">g</InputAdornment> }} />
+              </Grid>
+
+              {/* Alerjenler — müşteri ⓘ penceresinde ve ürün sayfasında simgeleriyle görür */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" fontWeight={700}>
+                  Alerjenler
+                </Typography>
+                <Typography variant="caption" color="text.secondary" component="div" sx={{ mb: 1 }}>
+                  Üründe bulunan alerjenleri seçin. Menüde (ⓘ bilgi penceresi) ve ürün sayfasında simgeleriyle gösterilir; hiçbiri seçilmezse gösterilmez.
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {ALLERGENS.map((code) => {
+                    const on = form.allergens.includes(code);
+                    return (
+                      <Chip
+                        key={code}
+                        icon={<AllergenIcon code={code} />}
+                        label={ALLERGEN_LABELS[code]}
+                        color={on ? 'warning' : 'default'}
+                        variant={on ? 'filled' : 'outlined'}
+                        onClick={() => toggleAllergen(code)}
+                        aria-pressed={on}
+                      />
+                    );
+                  })}
+                </Box>
               </Grid>
 
               {/* Prep time + availability */}
