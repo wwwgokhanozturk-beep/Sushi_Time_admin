@@ -10,7 +10,7 @@ import UploadIcon     from '@mui/icons-material/Upload';
 import PageLayout     from '@/components/layout/PageLayout';
 import { useMenuItem, useCreateMenuItem, useUpdateMenuItem } from '@/hooks/useMenu';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MENU_CATEGORIES } from '@/utils/constants';
+import { MENU_CATEGORIES, ROLL_CATEGORIES, ROLL_DEFAULTS } from '@/utils/constants';
 import { menuService } from '@/services/menuService';
 import ImageFrameEditor from '@/components/ImageFrameEditor';
 import AllergenIcon from '@/components/AllergenIcon';
@@ -19,11 +19,15 @@ import toast from 'react-hot-toast';
 
 const MAX_IMAGES = 3;
 
+const isRoll = (category) => ROLL_CATEGORIES.includes(category);
+
+// Новое блюдо открывается в разделе роллов — сразу со стандартным роллом
+// ресторана: 8 штук, 250 г (см. changeCategory).
 const EMPTY = {
   name: '', name_ru: '', name_tr: '', category: 'rolls', price: '',
   images: [], imageUrl: '', imageScale: 1, imageOffsetX: 0, imageOffsetY: 0,
   preparationTime: '15', calories: '0', protein: '0', fat: '0', carbs: '0',
-  weight: '0', pieces: '0', isAvailable: true,
+  weight: String(ROLL_DEFAULTS.weight), pieces: String(ROLL_DEFAULTS.pieces), isAvailable: true,
   allergens: [], // codes from utils/allergens
   stock: '',   // '' = unlimited (null); number = tracked quantity
   // per-language fields
@@ -119,6 +123,25 @@ export default function MenuItemFormPage() {
     setErrors((prev) => ({ ...prev, [field]: '' }));
   };
 
+  // Роллы у ресторана по 8 штук и 250 г. В разделе роллов пустые (0) вес и
+  // число штук заполняются этими значениями — их можно поменять вручную. Если
+  // новое блюдо уводят из роллов в другой раздел, подставленные значения
+  // снимаются, чтобы, например, у пиццы не осталось «8 шт.». У сохранённого
+  // блюда при смене раздела уже введённые значения не трогаем.
+  const changeCategory = (e) => {
+    const category = e.target.value;
+    setForm((prev) => {
+      const next = { ...prev, category };
+      for (const [field, value] of Object.entries(ROLL_DEFAULTS)) {
+        const current = String(prev[field] ?? '').trim();
+        if (isRoll(category) && (current === '' || Number(current) === 0)) next[field] = String(value);
+        else if (!isEdit && !isRoll(category) && isRoll(prev.category) && current === String(value)) next[field] = '0';
+      }
+      return next;
+    });
+    setErrors((prev) => ({ ...prev, category: '' }));
+  };
+
   // Kept in the regulation's order, as the site and the app show them.
   const toggleAllergen = (code) =>
     setForm((prev) => ({
@@ -206,7 +229,7 @@ export default function MenuItemFormPage() {
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth error={!!errors.category}>
                   <InputLabel>Kategori</InputLabel>
-                  <Select value={form.category} label="Kategori" onChange={set('category')}>
+                  <Select value={form.category} label="Kategori" onChange={changeCategory}>
                     {MENU_CATEGORIES.map((c) => (
                       <MenuItem key={c} value={c}>{c[0].toUpperCase() + c.slice(1)}</MenuItem>
                     ))}

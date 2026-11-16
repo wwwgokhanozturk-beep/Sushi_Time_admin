@@ -49,4 +49,10 @@ export const MENU_CATEGORIES = [
   "onigiri",
 ];
 
+// Sections whose dishes are rolls (on the site «РОЛЛЫ», «Темпура», «Хосо-ролл»,
+// «Ролл маки»). The restaurant's roll is 8 pieces and 250 g, so a new dish in
+// one of them starts with these values in the dish form (2026-11-16).
+export const ROLL_CATEGORIES = ["rolls", "tempura", "hosomaki", "temaki"];
+export const ROLL_DEFAULTS = { pieces: 8, weight: 250 };
+
 export const SIDEBAR_WIDTH = 240;
