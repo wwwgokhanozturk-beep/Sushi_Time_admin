@@ -5,6 +5,7 @@ import {
   Chip, CircularProgress, Alert, MenuItem,
   Pagination, Avatar, IconButton, Tooltip, Button,
   Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
+  FormControlLabel, Switch,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import StarsIcon from '@mui/icons-material/Stars';
@@ -15,8 +16,13 @@ import toast from 'react-hot-toast';
 import { userService } from '@/services/userService';
 import { useAuthStore } from '@/store/authStore';
 import PageLayout from '@/components/layout/PageLayout';
+import { OrderPlatformIcon } from '@/pages/Orders/components/OrderPlatformChip';
+import UserStatsCard from './UserStatsCard';
 
 const PAGE_SIZE = 15;
+
+// The server sends orderCount; ordersCount is what this page used to read.
+const ordersOf = (user) => user.orderCount ?? user.ordersCount ?? 0;
 
 function OrderCountBadge({ count }) {
   let color = 'default';
@@ -24,7 +30,7 @@ function OrderCountBadge({ count }) {
   else if (count >= 2) color = 'primary';
   return (
     <Chip
-      label={`${count} orders`}
+      label={`${count} sipariş`}
       size="small"
       color={color}
       variant={count >= 4 ? 'filled' : 'outlined'}
@@ -53,6 +59,9 @@ export default function UsersPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  // The site's throwaway «Misafir» accounts (chat / order tracking without an
+  // account) are not registrations — hidden unless asked for.
+  const [showGuests, setShowGuests] = useState(false);
 
   // debounce search: only fire query after user stops typing
   const handleSearchChange = (e) => {
@@ -69,6 +78,7 @@ export default function UsersPage() {
     page,
     limit: PAGE_SIZE,
     ...(search ? { search } : {}),
+    ...(showGuests ? {} : { guests: 'hide' }),
   };
 
   const { data, isLoading, isError, error } = useQuery({
@@ -90,6 +100,7 @@ export default function UsersPage() {
     mutationFn: (id) => userService.deleteUser(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['adminUsers'] });
+      qc.invalidateQueries({ queryKey: ['adminUserStats'] });
       toast.success('Kullanıcı silindi');
     },
     onError: (err) => toast.error(err.response?.data?.message || 'Silme başarısız'),
@@ -130,9 +141,12 @@ export default function UsersPage() {
 
   return (
     <PageLayout title="Kullanıcılar">
+      {/* ── Who uses Sushi Time, from where ── */}
+      <UserStatsCard />
+
       {/* ── Filters bar ── */}
       <Card elevation={0} sx={{ border: '1px solid #E5E7EB', borderRadius: 3, mb: 3 }}>
-        <CardContent>
+        <CardContent sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2 }}>
           <TextField
             placeholder="İsim, e-posta veya telefon ile ara… (Enter'a basın)"
             size="small"
@@ -148,6 +162,16 @@ export default function UsersPage() {
               ),
             }}
           />
+          <FormControlLabel
+            control={(
+              <Switch
+                size="small"
+                checked={showGuests}
+                onChange={(e) => { setShowGuests(e.target.checked); setPage(1); }}
+              />
+            )}
+            label={<Typography variant="body2">Misafir hesaplarını göster</Typography>}
+          />
         </CardContent>
       </Card>
 
@@ -156,6 +180,7 @@ export default function UsersPage() {
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="text.secondary">
             Toplam: <strong>{pagination?.total ?? 0}</strong> kullanıcı
+            {!showGuests && ' · misafir hesapları hariç'}
           </Typography>
         </Box>
       )}
@@ -252,10 +277,10 @@ export default function UsersPage() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <OrderCountBadge count={user.ordersCount || 0} />
+                    <OrderCountBadge count={ordersOf(user)} />
                   </TableCell>
                   <TableCell>
-                    {user.ordersCount >= 4 ? (
+                    {ordersOf(user) >= 4 ? (
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         <StarsIcon fontSize="small" color="warning" />
                         <Typography variant="caption" fontWeight={700} color="warning.main">
@@ -264,16 +289,20 @@ export default function UsersPage() {
                       </Box>
                     ) : (
                       <Typography variant="caption" color="text.disabled">
-                        {user.ordersCount > 0
-                          ? `Sadakate ${4 - user.ordersCount} sipariş kaldı`
+                        {ordersOf(user) > 0
+                          ? `Sadakate ${4 - ordersOf(user)} sipariş kaldı`
                           : user.role === 'customer' ? 'Henüz sipariş yok' : '—'}
                       </Typography>
                     )}
                   </TableCell>
                   <TableCell>
-                    <Typography variant="caption" color="text.secondary">
-                      {new Date(user.createdAt).toLocaleDateString('en-GB')}
-                    </Typography>
+                    {/* Where the account was made — recorded since 2026-11 */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                      <OrderPlatformIcon platform={user.signupPlatform} />
+                      <Typography variant="caption" color="text.secondary">
+                        {new Date(user.createdAt).toLocaleDateString('en-GB')}
+                      </Typography>
+                    </Box>
                   </TableCell>
                   <TableCell align="right">
                     <Tooltip title={currentUserId === user._id ? 'Kendinizi silemezsiniz' : 'Kullanıcıyı sil'}>

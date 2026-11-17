@@ -7,8 +7,11 @@ import { PLATFORM_LABELS } from '@/utils/constants';
 
 // Where the order was placed: iOS app, Android app or the website. Orders
 // from before the server recorded it have no platform and show nothing.
-const ICONS  = { ios: AppleIcon, android: AndroidIcon, web: LanguageIcon };
-const COLORS = { ios: '#111827', android: '#16A34A', web: '#2563EB' };
+// The same logos mark the platforms in the users' statistics.
+export const PLATFORM_ICONS  = { ios: AppleIcon, android: AndroidIcon, web: LanguageIcon };
+export const PLATFORM_ICON_COLORS = { ios: '#111827', android: '#16A34A', web: '#2563EB' };
+const ICONS  = PLATFORM_ICONS;
+const COLORS = PLATFORM_ICON_COLORS;
 
 // Compact form for the orders table (no room for another column): the logo
 // alone, the name on hover. Unknown platforms keep the same 16px slot so the

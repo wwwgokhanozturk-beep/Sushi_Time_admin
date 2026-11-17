@@ -41,11 +41,13 @@ export default function NotificationsPage() {
     queryFn: () => notificationService.getHistory({ limit: 50 }).then((r) => r.data.data),
   });
 
-  // How many devices will get each language
-  const { data: audience } = useQuery({
+  // How many phones will get each language, and how many opened the app lately
+  const { data: reach } = useQuery({
     queryKey: ['notifications', 'audience'],
-    queryFn: () => notificationService.getAudience().then((r) => r.data.data.audience),
+    queryFn: () => notificationService.getAudience().then((r) => r.data.data),
   });
+  const audience = reach?.audience;
+  const phones = audience ? Object.values(audience).reduce((a, b) => a + b, 0) : null;
 
   const broadcastMutation = useMutation({
     mutationFn: () => notificationService.broadcastByLanguage(
@@ -74,8 +76,7 @@ export default function NotificationsPage() {
   const handleSend = (e) => {
     e.preventDefault();
     if (!allFilled) return;
-    const total = audience ? Object.values(audience).reduce((a, b) => a + b, 0) : null;
-    if (!window.confirm(`Duyuru ${total ?? 'tüm'} cihaza gönderilsin mi? Geri alınamaz.`)) return;
+    if (!window.confirm(`Duyuru ${phones ?? 'tüm'} cihaza gönderilsin mi? Geri alınamaz.`)) return;
     broadcastMutation.mutate();
   };
 
@@ -98,13 +99,28 @@ export default function NotificationsPage() {
           </Alert>
 
           {audience && (
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
-              {LANGS.map((l) => (
-                <Chip key={l.code} size="small" label={`${l.flag} ${l.label}: ${audience[l.code] ?? 0}`} />
-              ))}
-              <Tooltip title="Uygulamanın dilini henüz bildirmeyen eski sürümler — üç metni tek mesajda alır">
-                <Chip size="small" variant="outlined" label={`Dili bilinmeyen: ${audience.unknown ?? 0}`} />
-              </Tooltip>
+            <Box sx={{ mb: 2 }}>
+              {/* These are phones, not people or registrations: every phone
+                  with the app installed and notifications allowed, signed in
+                  or not. The website has no push, so its visitors aren't here. */}
+              <Typography variant="body2">
+                Bildirimleri açık telefonlar: <strong>{phones}</strong>
+                {reach.openedRecently != null && (
+                  <> · son {reach.recentDays} günde uygulamayı açan: <strong>{reach.openedRecently}</strong></>
+                )}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" component="div" sx={{ mb: 1 }}>
+                Uygulaması yüklü ve bildirimlere izin vermiş telefonlar — hesaplı ya da misafir.
+                Web sitesi ziyaretçileri bu sayıya girmez. Dillere göre:
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                {LANGS.map((l) => (
+                  <Chip key={l.code} size="small" label={`${l.flag} ${l.label}: ${audience[l.code] ?? 0}`} />
+                ))}
+                <Tooltip title="Dilini bildirmeyen telefonlar: uygulamanın eski sürümü ya da uygulamayı uzun süredir açmamış (silmiş olabilir). Üç metni tek mesajda alır.">
+                  <Chip size="small" variant="outlined" label={`Dili bilinmeyen: ${audience.unknown ?? 0}`} />
+                </Tooltip>
+              </Box>
             </Box>
           )}
 
